@@ -163,7 +163,7 @@ class inspect_image_results(ddosa.DataAnalysis):
             print r['NAME'],r['DETSIG']
 
 class JEnergyBins(ddosa.DataAnalysis):
-    nchanpow=-4
+    nchanpow=-2
 
     def get_version(self):
         return self.get_signature()+"."+self.version+".nchpo%.5lg"%self.nchanpow
@@ -174,7 +174,10 @@ class ISDCENV(da.DataAnalysis):
 
 class DetectISDCENV(da.DataAnalysis):
     def main(self):
-        osa_version=os.environ['ISDC_ENV'].split("/")[-3]
+        if 'OSA_VERSION' in os.environ['ISDC_ENV']:
+            osa_version=os.environ['OSA_VERSION']
+        else:
+            osa_version=os.environ['ISDC_ENV'].split("/")[-3]
         ie=ISDCENV(use_version="OSA"+osa_version)
         if osa_version=="10.0":
             ie.noanalysis=True
