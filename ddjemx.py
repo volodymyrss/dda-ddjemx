@@ -1,7 +1,7 @@
 import ddosa
 import dataanalysis as da
 import os,time,shutil
-import pyfits
+from astropy.io import fits as pyfits
 from numpy import *
 import re
 
