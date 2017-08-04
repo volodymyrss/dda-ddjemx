@@ -5,7 +5,10 @@ from astropy.io import fits as pyfits
 from numpy import *
 import re
 
-import heaspa
+try:
+    import heaspa
+except:
+    pass
 
 class JEMX(da.DataAnalysis):
     num=2
