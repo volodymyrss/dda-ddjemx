@@ -58,7 +58,8 @@ class jemx_image(ddosa.DataAnalysis):
 
     cached=True
 
-    version="v2"
+    version="v2.1"
+
     def main(self):
         open("scw.list","w").write(self.input_scw.swgpath+"[1]")
 
