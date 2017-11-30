@@ -30,7 +30,10 @@ class JEMX(da.DataAnalysis):
     
     def get_name(self):
         return "jmx%i"%self.num
-    
+
+    def get_longish_name(self):
+        return "jemx%i" % self.num
+
     def get_swg(self):
         return "swg_jemx%i.fits"%self.num
     
@@ -201,8 +204,18 @@ class jemx_lcr(ddosa.DataAnalysis):
         ht['endLevel']="LCR"
         if hasattr(self,'input_usercat'):
             ht['CAT_I_usrCat']=self.input_usercat.cat.get_path()
+
+        ht['CAT_I_refCat'] = self.input_refcat.cat
+
         ht['skipLevels']=""
-        ht['nChanBins']=-2
+
+        if self.input_jbins.bins is None:
+            ht['nChanBins'] = self.input_jbins.nchanpow
+        else:
+            ht['nChanBins'] = len(self.input_jbins.bin_interpretation)
+            ht['chanLow'] = " ".join(["%i" % bin['chmin'] for bin in self.input_jbins.bin_interpretation])
+            ht['chanHigh'] = " ".join(["%i" % bin['chmax'] for bin in self.input_jbins.bin_interpretation])
+
         ht['LCR_timeStep']=self.tbin
         ht['COR_gainModel']=self.COR_gainModel
         ht['jemxNum']=self.input_jemx.num
@@ -255,6 +268,7 @@ class jemx_spe(ddosa.DataAnalysis):
     input_ic=ddosa.ICRoot
     input_jemx=JEMX
     input_usercat=UserCat
+    input_refcat=ddosa.GRcat
     input_jbins=JEnergyBins
 
     COR_gainModel=2
@@ -293,6 +307,8 @@ class jemx_spe(ddosa.DataAnalysis):
         ht['IC_Alias']="OSA"
         ht['startLevel']="COR"
         ht['endLevel']="SPE"
+        ht['CAT_I_refCat'] = self.input_refcat.cat
+
         if hasattr(self,'input_usercat'):
             ht['CAT_I_usrCat']=self.input_usercat.cat.get_full_path()
         ht['skipLevels']=""
@@ -302,8 +318,8 @@ class jemx_spe(ddosa.DataAnalysis):
             ht['nChanBins']=self.input_jbins.nchanpow
         else:
             ht['nChanBins'] = len(self.input_jbins.bin_interpretation)
-            ht['chanMin'] = " ".join(["%i"%bin['chmin'] for bin in self.input_jbins.bin_interpretation])
-            ht['chanMax'] = " ".join(["%i"%bin['chmax'] for bin in self.input_jbins.bin_interpretation])
+            ht['chanLow'] = " ".join(["%i"%bin['chmin'] for bin in self.input_jbins.bin_interpretation])
+            ht['chanHigh'] = " ".join(["%i"%bin['chmax'] for bin in self.input_jbins.bin_interpretation])
 
         #ht['LCR_timeStep']=self.tbin
         ht['COR_gainModel']=self.COR_gainModel
@@ -608,3 +624,88 @@ class mosaic_src_loc(ddosa.DataAnalysis):
         ht.run()
 
         self.sloc_res=da.DataFile(fn)
+
+
+
+class JMXSpectraGroups(ddosa.DataAnalysis):
+    input_scwlist=None
+    input_lc_processing=graphtools.Factorize(use_root='jemx_spe',use_leaves=["ScWData",])
+
+
+    allow_alias=True
+    run_for_hashe=True
+
+    outtype="BIN_I"
+
+    def construct_og(self,og_fn):
+        scw_og_fns = []
+
+        for scw,spe in self.members:
+            fn = "og_%s.fits" % scw.input_scwid.str()
+            ddosa.construct_gnrl_scwg_grp(scw, children=
+                [
+                    spe.spe.get_path(),
+                    spe.arf.get_path(),
+                    scw.auxadppath + "/time_correlation.fits[AUXL-TCOR-HIS]",
+                ], fn=fn)
+
+            ddosa.import_attr(scw.scwpath + "/swg.fits",
+                        ["OBTSTART", "OBTEND", "TSTART", "TSTOP", "SW_TYPE", "TELAPSE", "SWID", "SWBOUND"],fn)
+            ddosa.set_attr({'ISDCLEVL': self.outtype}, fn)
+            ddosa.set_attr({'INSTRUME': "IBIS"}, fn)
+
+            scw_og_fns.append(fn)
+
+        ddosa.construct_gnrl_scwg_grp_idx(scw_og_fns,fn="og_idx.fits")
+        ddosa.set_attr({'ISDCLEVL': self.outtype}, "og_idx.fits")
+
+        ddosa.construct_og(["og_idx.fits"], fn=og_fn)
+
+        ddosa.set_attr({'ISDCLEVL': self.outtype}, og_fn)
+
+    def main(self):
+        self.members=[
+            (
+                scw,
+                jemx_spe(assume=[scw]),
+            ) for scw in self.input_scwlist.scwlistdata
+        ]
+
+        if len(self.members)==0:
+            raise ddosa.EmptyScWList()
+
+
+class spe_pick(ddosa.DataAnalysis):
+    input_spegroups = JMXSpectraGroups
+    input_jemx=JEMX
+    source_names=["Crab"]
+
+    cached=True
+
+    def get_version(self):
+        try:
+            return super(spe_pick, self).get_version()+"."+(".".join([m.replace(" ","_") for m in self.source_names]))
+        except:
+            return "spe_pick.UNDEFINED"
+
+    def main(self):
+        self.input_spegroups.construct_og("ogg.fits")
+
+        dl=ddosa.heatool("dal_list")
+        dl['dol']="ogg.fits"
+        dl.run()
+
+        assert len(self.source_names)==1
+
+        for source_name in self.source_names:
+            fn = "spec_%s.fits" % source_name.replace(" ","_")
+            #ddosa.remove_withtemplate(fn+"(ISGR-SRC.-SPE-IDX.tpl)")
+
+            ht = ddosa.heatool("spe_pick")
+            ht['group'] = "ogg.fits[1]"
+            ht['source']="\"source_name\""
+            ht['instrument']=self.input_jemx.get_name()
+            ht['sumname']=fn
+            ht.run()
+
+            setattr(self,'spectrum_'+source_name,da.DataFile(fn))

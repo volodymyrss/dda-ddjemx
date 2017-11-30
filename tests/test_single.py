@@ -77,3 +77,50 @@ def test_image_nodata():
     except ddjemx.ExceptionJ_SCW_NO_MINIMUM_DATA as ex:
         assert ex.args['jemx']=="jmx2"
 
+
+
+
+def test_spectrum():
+    #
+    #da.reset()
+    import ddosa
+    import ddjemx
+    #reload(da)
+    reload(ddosa)
+    reload(ddjemx)
+
+    da.debug_output()
+
+    fa = ddjemx.jemx_spe(assume=[
+        ddosa.ScWData(input_scwid="010200230010.001"),
+        ddjemx.JEnergyBins(use_bins=[(3, 10), (10, 30)]),
+    ])
+    fa.read_caches = []
+
+    try:
+        fa.get()
+    except ddjemx.ExceptionJ_SCW_NO_MINIMUM_DATA as ex:
+        assert ex.args['jemx']=="jmx2"
+
+
+def test_lc():
+    #
+    #da.reset()
+    import ddosa
+    import ddjemx
+    #reload(da)
+    reload(ddosa)
+    reload(ddjemx)
+
+    da.debug_output()
+
+    fa = ddjemx.jemx_lcr(assume=[
+        ddosa.ScWData(input_scwid="010200230010.001"),
+        ddjemx.JEnergyBins(use_bins=[(3, 10), (10, 30)]),
+    ])
+    fa.read_caches = []
+
+    try:
+        fa.get()
+    except ddjemx.ExceptionJ_SCW_NO_MINIMUM_DATA as ex:
+        assert ex.args['jemx']=="jmx2"

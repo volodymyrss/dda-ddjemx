@@ -61,4 +61,49 @@ def test_mosaic_srcloc():
     src_locator.get()
 
 
+def test_spectra_groups():
+    #  da.reset()
+    import ddosa
+    import ddjemx
+    # reload(da)
+    reload(ddosa)
+    reload(ddjemx)
+
+    jb = ddjemx.JEnergyBins(use_bins=[(3, 10), (10, 30)])
+    jb.promote()
+
+    groups = ddjemx.JMXSpectraGroups(input_scwlist=ddosa.IDScWList(
+                use_scwid_list=["010200230010.001", "010200240010.001", "010200250010.001"])
+    )
+
+    groups.get()
+
+    groups.construct_og("ogg.fits")
+
+    dl = ddosa.heatool("dal_list")
+    dl['dol'] = "ogg.fits"
+    dl.run()
+
+
+def test_spectra_grouped():
+    #  da.reset()
+    import ddosa
+    import ddjemx
+    # reload(da)
+    reload(ddosa)
+    reload(ddjemx)
+
+    jb = ddjemx.JEnergyBins(use_bins=[(3, 10), (10, 30)])
+    jb.promote()
+
+
+    groups = ddjemx.spe_pick(
+                use_source_names=["J053432.0+220052"],
+                input_spegroups=ddjemx.JMXSpectraGroups(input_scwlist=ddosa.IDScWList(
+                    use_scwid_list=["010200230010.001", "010200240010.001", "010200250010.001"])
+    ))
+
+    groups.get()
+
+
 
