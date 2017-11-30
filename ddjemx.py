@@ -93,7 +93,7 @@ class jemx_image(ddosa.DataAnalysis):
         shutil.copy(ht.cwd+"/scw/"+self.input_scw.scwid+"/"+name+"_sky_ima.fits","./"+name+"_sky_ima.fits")
         shutil.copy(ht.cwd+"/scw/"+self.input_scw.scwid+"/"+name+"_srcl_res.fits","./"+name+"_srcl_res.fits")
         
-        self.image=da.DataFile(name+"_sky_ima.fits")
+        self.skyima=da.DataFile(name+"_sky_ima.fits")
         self.srclres=da.DataFile(name+"_srcl_res.fits")
 
 class jemx_lcr(ddosa.DataAnalysis):
