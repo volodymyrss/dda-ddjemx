@@ -7,7 +7,7 @@ import pilton
 import dataanalysis as da
 from dataanalysis import graphtools
 import os,time,shutil
-from astropy.io import fits as pyfits
+from astropy.io import fits as fits
 from numpy import *
 import re
 
@@ -48,7 +48,7 @@ class UserCat(ddosa.DataAnalysis):
         fn="jemx_user_catalog.fits"
         ddosa.remove_withtemplate(fn)
 
-        f=pyfits.open(self.input_cat.cat[:-3])
+        f=fits.open(self.input_cat.cat[:-3])
         f[1].data['FLAG'][f[1].data['NAME']=='Ginga 2023+338']=1
         f[1].data=f[1].data[f[1].data['FLAG']==1]
         f.writeto(fn,clobber=True)
@@ -174,7 +174,7 @@ class inspect_image_results(ddosa.DataAnalysis):
     input_image=jemx_image
 
     def main(self):
-        for r in pyfits.open(self.input_image.srclres.get_path())[1].data:
+        for r in fits.open(self.input_image.srclres.get_path())[1].data:
             print(r['NAME'],r['DETSIG'])
         
 
@@ -182,14 +182,40 @@ class inspect_image_results(ddosa.DataAnalysis):
     input_image=jemx_image
 
     def main(self):
-        for r in pyfits.open(self.input_image.srclres.get_path())[1].data:
+        for r in fits.open(self.input_image.srclres.get_path())[1].data:
             print(r['NAME'],r['DETSIG'])
 
 class JEnergyBins(ddosa.DataAnalysis):
     nchanpow=-2
+    input_ic=ddosa.ICRoot
+
+    bins=None
 
     def get_version(self):
         return self.get_signature()+"."+self.version+".nchpo%.5lg"%self.nchanpow
+
+    def main(self):
+        if self.bins is not None:
+            rsp_bins=fits.open(self.input_ic.icroot+"/ic/jmx1/rsp/jmx1_rmf_grp_0046.fits")[3].data
+
+            self.bin_interpretation=[]
+
+            for e1,e2 in self.bins:
+                ch1 = rsp_bins['CHANNEL'][rsp_bins['E_MIN'] > e1][0]
+                ch2 = rsp_bins['CHANNEL'][rsp_bins['E_MAX'] < e2][-1]
+                e1_true,e2_true=rsp_bins['E_MIN'][rsp_bins['CHANNEL'] == ch1][0], rsp_bins['E_MAX'][rsp_bins['CHANNEL'] == ch2][0]
+                print("for",e1,e2,"channels",ch1,ch2,"true energies",e1_true,e2_true)
+                self.bin_interpretation.append(
+                    dict(
+                        emin=e1,
+                        emax=e2,
+                        emin_true=e1_true,
+                        emax_true=e2_true,
+                        chmin=ch1,
+                        chmax=ch2,
+                    )
+                )
+
 
 class ISDCENV(da.DataAnalysis):
     def main(self):
@@ -286,8 +312,8 @@ class ProcessJSpectra(ddosa.DataAnalysis):
     input_jmx=JEMX
 
     def main(self):
-        arfs_data=pyfits.open(self.input_spectrum.arf.get_path())[1].data
-        for source_data in pyfits.open(self.input_spectrum.spe.get_path())[1].data:
+        arfs_data=fits.open(self.input_spectrum.arf.get_path())[1].data
+        for source_data in fits.open(self.input_spectrum.spe.get_path())[1].data:
             name=source_data['NAME']
             print(name,sum((source_data['RATE']/source_data['STAT_ERR'])**2)**0.5)
             fn="jemx%i_spectrum_%s.fits"%(self.input_jmx.num,name.replace(" ","_"))
@@ -300,7 +326,7 @@ class ProcessJSpectra(ddosa.DataAnalysis):
             arffn="jemx%i_arf_%s.fits"%(self.input_jmx.num,name.replace(" ","_"))
             heaspa.ARF(arf_data['ENERG_LO'].astype(float64),arf_data['ENERG_HI'].astype(float64),arf_data['SPECRESP'].astype(float64)).write(arffn)
 
-            f=pyfits.open(fn)
+            f=fits.open(fn)
             f[1].header['ANCRFILE']=arffn
             f[1].header['RESPFILE']=self.input_rmf.rmf.get_path()
             f.writeto(fn,clobber=True)
@@ -405,7 +431,7 @@ class mosaic_jemx(ddosa.DataAnalysis):
                 continue
 
             fn = image.skyima.get_path()
-            h = pyfits.open(fn)[2].header
+            h = fits.open(fn)[2].header
             ra, dec = h['CRVAL1'], h['CRVAL2']
 
             thelist = self.choose_list((ra, dec))
@@ -443,7 +469,7 @@ class mosaic_jemx(ddosa.DataAnalysis):
 
                     statistic = sens.statistics[0]
 
-                    fe = pyfits.open(imageobj.skyima.get_path())[2]
+                    fe = fits.open(imageobj.skyima.get_path())[2]
                     statistic['tstart'] = fe.header['TSTART']
                     statistic['tstop'] = fe.header['TSTOP']
 
@@ -480,7 +506,7 @@ class mosaic_jemx(ddosa.DataAnalysis):
             for imagefilename, imageobj in thelist:
                 print("stacking", imagefilename)
 
-                image_file = pyfits.open(imagefilename)
+                image_file = fits.open(imagefilename)
                 if stacked_file is None:
                     stacked_file = image_file
                 else:
@@ -510,7 +536,7 @@ class mosaic_jemx(ddosa.DataAnalysis):
             stacked = "stacked_aligned_%.5lg_%.5lg.fits" % (ra, dec)
             f = stacked_aligned / stacked_aligned_var
             v = 1 / stacked_aligned_var
-            pyfits.PrimaryHDU(f / v ** 0.5).writeto(stacked, clobber=True)
+            fits.PrimaryHDU(f / v ** 0.5).writeto(stacked, clobber=True)
             setattr(self, stacked, da.DataFile(stacked))
 
             stacked = "stacked_%.5lg_%.5lg.fits" % (ra, dec)

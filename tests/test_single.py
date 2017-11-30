@@ -1,5 +1,40 @@
 import dataanalysis.core as da
 
+def test_energy_binning():
+    da.reset()
+    import ddosa
+    import ddjemx
+    reload(ddosa)
+    reload(ddjemx)
+
+    da.debug_output()
+
+    fa = ddjemx.JEnergyBins(use_bins=[(3,10),(10,30)])
+    fa.read_caches = []
+    fa.get()
+
+    assert hasattr(fa,'bin_interpretation')
+
+    assert fa.bin_interpretation[0]['chmin']==46
+
+
+
+def test_energy_binning_standard():
+    da.reset()
+    import ddosa
+    import ddjemx
+    reload(ddosa)
+    reload(ddjemx)
+
+    da.debug_output()
+
+    fa = ddjemx.JEnergyBins()
+    fa.read_caches = []
+
+    fa.get()
+
+
+
 def test_image():
     #
     da.reset()
