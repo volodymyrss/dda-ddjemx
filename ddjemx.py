@@ -98,7 +98,7 @@ class JEnergyBins(ddosa.DataAnalysis):
                     )
                 )
 
-class JEnergyBinsSpectra(ddosa.DataAnalysis):
+class JEnergyBinsSpectra(JEnergyBins):
     pass
 
 
