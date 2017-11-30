@@ -47,6 +47,7 @@ def test_image():
 
     fa = ddjemx.jemx_image(assume=[
         ddosa.ScWData(input_scwid="010200230010.001"),
+        ddjemx.JEnergyBins(use_bins=[(3, 10), (10, 30)]),
     ])
     fa.read_caches = []
 
@@ -59,6 +60,7 @@ def test_image_nodata():
     da.reset()
     import ddosa
     import ddjemx
+    reload(da)
     reload(ddosa)
     reload(ddjemx)
 
@@ -66,6 +68,7 @@ def test_image_nodata():
 
     fa = ddjemx.jemx_image(assume=[
         ddosa.ScWData(input_scwid="066500230010.001"),
+        ddjemx.JEnergyBins(use_bins=[(3, 10), (10, 30)]),
     ])
     fa.read_caches = []
 

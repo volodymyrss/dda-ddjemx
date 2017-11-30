@@ -57,11 +57,50 @@ class UserCat(ddosa.DataAnalysis):
 
 
 
+class JEnergyBins(ddosa.DataAnalysis):
+    nchanpow=-2
+    input_ic=ddosa.ICRoot
+
+    bins=None
+
+    def get_version(self):
+        v=self.get_signature()+"."+self.version
+
+        if self.bins is not None:
+            v+="".join([".%.5lg_%.5lg"%(e1,e2) for e1,e2 in self.bins])
+        else:
+            v += ".nchpo%.5lg" % self.nchanpow
+
+        return v
+
+    def main(self):
+        if self.bins is not None:
+            rsp_bins=fits.open(self.input_ic.icroot+"/ic/jmx1/rsp/jmx1_rmf_grp_0046.fits")[3].data
+
+            self.bin_interpretation=[]
+
+            for e1,e2 in self.bins:
+                ch1 = rsp_bins['CHANNEL'][rsp_bins['E_MIN'] > e1][0]
+                ch2 = rsp_bins['CHANNEL'][rsp_bins['E_MAX'] < e2][-1]
+                e1_true,e2_true=rsp_bins['E_MIN'][rsp_bins['CHANNEL'] == ch1][0], rsp_bins['E_MAX'][rsp_bins['CHANNEL'] == ch2][0]
+                print("for",e1,e2,"channels",ch1,ch2,"true energies",e1_true,e2_true)
+                self.bin_interpretation.append(
+                    dict(
+                        emin=e1,
+                        emax=e2,
+                        emin_true=e1_true,
+                        emax_true=e2_true,
+                        chmin=ch1,
+                        chmax=ch2,
+                    )
+                )
+
 class jemx_image(ddosa.DataAnalysis):
     input_scw=ddosa.ScWData
     input_ic=ddosa.ICRoot
     input_jemx=JEMX
     input_refcat=ddosa.GRcat
+    input_jbins=JEnergyBins
 
     cached=True
 
@@ -93,7 +132,14 @@ class jemx_image(ddosa.DataAnalysis):
         ht['CAT_I_refCat'] = self.input_refcat.cat
         ht['startLevel']="COR"
         ht['endLevel']="IMA"
-        ht['nChanBins']=-4
+
+        if self.input_jbins.bins is None:
+            ht['nChanBins']=self.input_jbins.nchanpow
+        else:
+            ht['nChanBins'] = len(self.input_jbins.bin_interpretation)
+            ht['chanLow'] = " ".join(["%i"%bin['chmin'] for bin in self.input_jbins.bin_interpretation])
+            ht['chanHigh'] = " ".join(["%i"%bin['chmax'] for bin in self.input_jbins.bin_interpretation])
+
         ht['jemxNum']=self.input_jemx.num
 
         try:
@@ -185,36 +231,6 @@ class inspect_image_results(ddosa.DataAnalysis):
         for r in fits.open(self.input_image.srclres.get_path())[1].data:
             print(r['NAME'],r['DETSIG'])
 
-class JEnergyBins(ddosa.DataAnalysis):
-    nchanpow=-2
-    input_ic=ddosa.ICRoot
-
-    bins=None
-
-    def get_version(self):
-        return self.get_signature()+"."+self.version+".nchpo%.5lg"%self.nchanpow
-
-    def main(self):
-        if self.bins is not None:
-            rsp_bins=fits.open(self.input_ic.icroot+"/ic/jmx1/rsp/jmx1_rmf_grp_0046.fits")[3].data
-
-            self.bin_interpretation=[]
-
-            for e1,e2 in self.bins:
-                ch1 = rsp_bins['CHANNEL'][rsp_bins['E_MIN'] > e1][0]
-                ch2 = rsp_bins['CHANNEL'][rsp_bins['E_MAX'] < e2][-1]
-                e1_true,e2_true=rsp_bins['E_MIN'][rsp_bins['CHANNEL'] == ch1][0], rsp_bins['E_MAX'][rsp_bins['CHANNEL'] == ch2][0]
-                print("for",e1,e2,"channels",ch1,ch2,"true energies",e1_true,e2_true)
-                self.bin_interpretation.append(
-                    dict(
-                        emin=e1,
-                        emax=e2,
-                        emin_true=e1_true,
-                        emax_true=e2_true,
-                        chmin=ch1,
-                        chmax=ch2,
-                    )
-                )
 
 
 class ISDCENV(da.DataAnalysis):
@@ -281,7 +297,14 @@ class jemx_spe(ddosa.DataAnalysis):
             ht['CAT_I_usrCat']=self.input_usercat.cat.get_full_path()
         ht['skipLevels']=""
         ht['skipSPEfirstScw']="n"
-        ht['nChanBins']=self.input_jbins.nchanpow
+
+        if self.input_jbins.bins is None:
+            ht['nChanBins']=self.input_jbins.nchanpow
+        else:
+            ht['nChanBins'] = len(self.input_jbins.bin_interpretation)
+            ht['chanMin'] = " ".join(["%i"%bin['chmin'] for bin in self.input_jbins.bin_interpretation])
+            ht['chanMax'] = " ".join(["%i"%bin['chmax'] for bin in self.input_jbins.bin_interpretation])
+
         #ht['LCR_timeStep']=self.tbin
         ht['COR_gainModel']=self.COR_gainModel
         ht['jemxNum']=self.input_jemx.num
@@ -393,7 +416,7 @@ class mosaic_jemx(ddosa.DataAnalysis):
 
     test_files = False
 
-    version = "v1"
+    version = "v1.1"
 
     def get_version(self):
         v = self.get_signature() + "." + self.version
@@ -560,3 +583,28 @@ class mosaic_jemx(ddosa.DataAnalysis):
             setattr(self, regionfile, da.DataFile(regionfile))
 
             self.skyima = da.DataFile(mosaic)  # store last
+
+            fn = "jmx_sloc_res.fits"
+            ht = ddosa.heatool("j_ima_src_locator")
+            ht['inDOL'] = mosaic + "[2]"
+            ht['sigDOL'] = mosaic + "[3]"
+            ht['outFile'] = fn
+            ht.run()
+
+            self.skyres = da.DataFile(fn)
+
+
+class mosaic_src_loc(ddosa.DataAnalysis):
+    input_mosaic=mosaic_jemx
+
+    copy_cached_input=False
+
+    def main(self):
+        fn="jmx_sloc_res.fits"
+        ht=ddosa.heatool("j_ima_src_locator")
+        ht['inDOL'] = self.input_mosaic.skyima.get_path()+"[2]"
+        ht['sigDOL'] = self.input_mosaic.skyima.get_path() + "[3]"
+        ht['outFile']=fn
+        ht.run()
+
+        self.sloc_res=da.DataFile(fn)

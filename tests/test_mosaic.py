@@ -2,29 +2,63 @@ import dataanalysis.core as da
 
 
 def test_image_list():
-    da.reset()
+    #da.reset()
     import ddosa
     import ddjemx
+    #reload(da)
     reload(ddosa)
     reload(ddjemx)
 
-    mosaic=ddjemx.JMXScWImageList(input_scwlist=ddosa.IDScWList(use_scwid_list=["010200230010.001","010200240010.001"]))
+    jb=ddjemx.JEnergyBins(use_bins=[(3, 10), (10, 30)])
+    jb.promote()
+
+    mosaic=ddjemx.JMXScWImageList(
+        input_scwlist=ddosa.IDScWList(use_scwid_list=["010200230010.001","010200240010.001","010200250010.001"]),
+    )
 
     mosaic.get()
 
 
 def test_mosaic():
-    da.reset()
+  #  da.reset()
     import ddosa
     import ddjemx
+    #reload(da)
     reload(ddosa)
     reload(ddjemx)
 
+
+    jb = ddjemx.JEnergyBins(use_bins=[(3, 10), (10, 30)])
+    jb.promote()
+
     mosaic=ddjemx.mosaic_jemx(
               assume=[
-                  ddjemx.JMXScWImageList(input_scwlist=ddosa.IDScWList(use_scwid_list=["010200230010.001","010200240010.001"])),
+                  ddjemx.JMXScWImageList(input_scwlist=ddosa.IDScWList(use_scwid_list=["010200230010.001","010200240010.001","010200250010.001"])),
               ]
             )
 
     mosaic.get()
+
+
+def test_mosaic_srcloc():
+    #  da.reset()
+    import ddosa
+    import ddjemx
+    # reload(da)
+    reload(ddosa)
+    reload(ddjemx)
+
+    jb = ddjemx.JEnergyBins(use_bins=[(3, 10), (10, 30)])
+    jb.promote()
+
+    src_locator = ddjemx.mosaic_src_loc(input_mosaic=ddjemx.mosaic_jemx(
+        assume=[
+            ddjemx.JMXScWImageList(input_scwlist=ddosa.IDScWList(
+                use_scwid_list=["010200230010.001", "010200240010.001", "010200250010.001"])),
+        ]
+    ))
+
+    src_locator.get()
+
+
 
