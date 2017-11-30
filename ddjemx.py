@@ -1,6 +1,7 @@
 from __future__ import print_function
 
 import ddosa
+import pilton
 import dataanalysis as da
 import os,time,shutil
 from astropy.io import fits as pyfits
@@ -10,6 +11,9 @@ import re
 try:
     import heaspa
 except:
+    pass
+
+class ExceptionJ_SCW_NO_MINIMUM_DATA(da.AnalysisException):
     pass
 
 class JEMX(da.DataAnalysis):
@@ -88,7 +92,13 @@ class jemx_image(ddosa.DataAnalysis):
         ht['endLevel']="IMA"
         ht['nChanBins']=-4
         ht['jemxNum']=self.input_jemx.num
-        ht.run()
+
+        try:
+            ht.run()
+        except pilton.HEAToolException as ex:
+            if 'J_SCW_NO_MINIMUM_DATA' in ht.output:
+                raise ExceptionJ_SCW_NO_MINIMUM_DATA(dict(scw=self.input_scw.scwid,jemx=self.input_jemx.get_name()))
+
 
         name=self.input_jemx.get_name()
         shutil.copy(ht.cwd+"/scw/"+self.input_scw.scwid+"/"+name+"_sky_ima.fits","./"+name+"_sky_ima.fits")
@@ -96,6 +106,7 @@ class jemx_image(ddosa.DataAnalysis):
         
         self.skyima=da.DataFile(name+"_sky_ima.fits")
         self.srclres=da.DataFile(name+"_srcl_res.fits")
+
 
 class jemx_lcr(ddosa.DataAnalysis):
     input_scw=ddosa.ScWData
