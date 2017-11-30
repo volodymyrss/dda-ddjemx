@@ -701,14 +701,18 @@ class spe_pick(ddosa.DataAnalysis):
         assert len(self.source_names)==1
 
         for source_name in self.source_names:
-            fn = "spec_%s.fits" % source_name.replace(" ","_")
+            sumname = "spec_%s" % source_name.replace(" ","_")
             #ddosa.remove_withtemplate(fn+"(ISGR-SRC.-SPE-IDX.tpl)")
 
             ht = ddosa.heatool("spe_pick")
             ht['group'] = "ogg.fits[1]"
-            ht['source']="\"source_name\""
+            ht['source']=source_name
             ht['instrument']=self.input_jemx.get_name()
-            ht['sumname']=fn
+            ht['sumname']=sumname
             ht.run()
 
-            setattr(self,'spectrum_'+source_name,da.DataFile(fn))
+            import glob
+            print(glob.glob("*"))
+
+            setattr(self,'spectrum_'+source_name,da.DataFile(sumname+"_pha.fits"))
+            setattr(self, 'arf_' + source_name, da.DataFile(sumname + "_arf.fits"))

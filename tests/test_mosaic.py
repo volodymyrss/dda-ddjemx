@@ -98,7 +98,7 @@ def test_spectra_grouped():
 
 
     groups = ddjemx.spe_pick(
-                use_source_names=["J053432.0+220052"],
+                use_source_names=["Crab"],
                 input_spegroups=ddjemx.JMXImageSpectraGroups(input_scwlist=ddosa.IDScWList(
                     use_scwid_list=["010200230010.001", "010200240010.001", "010200250010.001"])
     ))
