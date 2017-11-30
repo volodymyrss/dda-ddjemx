@@ -1,8 +1,11 @@
 from __future__ import print_function
 
+import numpy as np
+
 import ddosa
 import pilton
 import dataanalysis as da
+from dataanalysis import graphtools
 import os,time,shutil
 from astropy.io import fits as pyfits
 from numpy import *
@@ -304,3 +307,230 @@ class ProcessJSpectra(ddosa.DataAnalysis):
             setattr(self,arffn,da.DataFile(arffn))
 
 #j_rebin_rmf binlist=STD_016
+
+
+
+class JMXScWImageList(ddosa.DataAnalysis):
+    input_scwlist=None
+    copy_cached_input=False
+    input_imagingsummary=graphtools.Factorize(use_root='jemx_image',use_leaves=["ScWData",])
+
+
+    allow_alias=True
+    run_for_hashe=True
+
+    version="allthem"
+
+    maxima=None
+    firstima=0
+
+    def get_version(self):
+        if self.maxima is None and self.firstima==0:
+            return self.get_signature()+"."+self.version
+        return self.get_signature()+"."+repr(self.firstima)+"."+repr(self.maxima)
+
+    def main(self):
+        print("jemx_image constructed as",ddosa.ii_skyimage())
+        #ddosa.ShadowUBCImage(assume=scw)
+        self.images=[(scw,jemx_image(assume=scw),) for scw in self.input_scwlist.scwlistdata]
+
+        if len(self.images)==0:
+            raise ddosa.EmptyScWList()
+
+        print("images will be:",self.images[0],"..",self.images[-1])
+        if self.maxima is not None:
+            self.images=self.images[self.firstima:self.firstima+self.maxima]
+
+# this is so old
+def angsep(ra1,dec1,ra2,dec2):
+    ra1*= np.pi / 180.
+    dec1*= np.pi / 180.
+    ra2*= np.pi / 180.
+    dec2*= np.pi / 180.
+    SEP=np.arccos(np.cos(dec1) * np.cos(dec2) * np.cos(ra1 - ra2) + np.sin(dec1) * np.sin(dec2)) #returns values between 0 and pi radians
+    SEP*= 180. / np.pi
+    return SEP
+
+class mosaic_jemx(ddosa.DataAnalysis):
+    input_imagelist = JMXScWImageList
+
+    # write_caches=[da.TransientCache,ddosa.MemCacheIntegralFallback,ddosa.MemCacheIntegralIRODS]
+    # read_caches=[da.TransientCache,ddosa.MemCacheIntegralFallback,ddosa.MemCacheIntegralFallbackOldPath,ddosa.MemCacheIntegralIRODS]
+
+    copy_cached_input = False
+
+    maxsep = 30
+
+    pixdivide = 2
+
+    cached = True
+
+    test_files = False
+
+    version = "v1"
+
+    def get_version(self):
+        v = self.get_signature() + "." + self.version
+
+        if self.pixdivide != 2:
+            v += ".pd%i" % self.pixdivide
+        return v
+
+    def main(self):
+        print("will mosaic")
+
+        self.split_in_lists()
+        self.mosaic_lists()
+        del self.lists
+
+    def choose_list(self, (ra, dec)):
+        for (list_ra, list_dec), thelist in self.lists:
+            if angsep(list_ra, list_dec, ra, dec) < self.maxsep:
+                return thelist
+        self.lists.append([(ra, dec), []])
+        print("new list at", ra, dec)
+        return self.lists[-1][1]
+
+    def split_in_lists(self):
+        self.lists = []
+
+        for l in self.input_imagelist.images:
+            scw, image= l[:2]
+            print("image:", image)
+
+            print(image._da_locally_complete)
+
+            if hasattr(image, 'empty_results') and image.empty_results or not hasattr(image, 'skyima'):
+                print("skipping", image)
+                continue
+
+            fn = image.skyima.get_path()
+            h = pyfits.open(fn)[2].header
+            ra, dec = h['CRVAL1'], h['CRVAL2']
+
+            thelist = self.choose_list((ra, dec))
+            # print "offered list",thelist
+
+            thelist.append((fn, image))
+            print("adding image to list:", len(thelist))
+
+        for thelist in self.lists:
+            print(thelist[0], len(thelist[1]))
+
+    def mosaic_lists(self):
+        self.mosaics = []
+        self.stacked = []
+        for i, ((ra, dec), thelist) in enumerate(self.lists):
+            print("list", i, ra, dec, thelist)
+
+            sens_stats_fn = "sens_stats_%.5lg_%.5lg.txt" % (ra, dec)
+
+            listfile = "image_list_%.5lg_%.5lg.txt" % (ra, dec)
+            f = open(listfile, "w")
+
+            sens_stats = []
+            sens_file = open(sens_stats_fn, "w")
+            sens_keys = None
+
+            for image, imageobj, in thelist:
+                print(image, )
+                if hasattr(image, 'empty_results'):
+                    print("skipping", image)
+                    continue
+
+                if False: #has_imagesensitivity:
+                    print(sens.__dict__)
+
+                    statistic = sens.statistics[0]
+
+                    fe = pyfits.open(imageobj.skyima.get_path())[2]
+                    statistic['tstart'] = fe.header['TSTART']
+                    statistic['tstop'] = fe.header['TSTOP']
+
+                    statistic['sensi_min_exposure_corr'] = statistic['sensi_min'] * (statistic[
+                                                                                         'exposure_at_sensi_min'] / 2000.) ** 0.5
+                    if statistic['sensi_min_exposure_corr'] == 0:
+                        statistic['sensi_min_exposure_corr'] = 100
+
+                    statistic['flag'] = 1
+                    if statistic['sensi_min_exposure_corr'] > 400.:  # hardcoded!
+                        statistic['flag'] = 0
+
+                    sens_stats.append([imageobj.assumptions, statistic])
+
+                    if sens_keys is None:
+                        sens_keys = statistic.keys()
+                        sens_file.write("fn " + (" ".join(sens_keys)) + "\n")
+
+                    sens_file.write(image + " ")
+                    sens_file.write(" ".join("%.5lg" % statistic[k] for k in sens_keys) + "\n")
+
+                    if statistic['flag'] <= 0:
+                        continue
+
+                f.write(image + "\n")
+
+            f.close()
+
+            stacked_file = None
+            stacked_aligned = np.zeros((1500, 1500))
+            stacked_aligned_var = np.zeros((1500, 1500))
+            stacked_shad_file = None
+            stacked_effi_file = None
+            for imagefilename, imageobj in thelist:
+                print("stacking", imagefilename)
+
+                image_file = pyfits.open(imagefilename)
+                if stacked_file is None:
+                    stacked_file = image_file
+                else:
+                    for i, e in enumerate(image_file[2:]):
+                        stacked_file[i + 2].data += e.data
+
+                # aligned
+                flux = image_file[2].data
+                var = image_file[3].data
+                sig = image_file[4].data
+                var[np.isnan(var)] = np.inf
+                var[var == 0] = np.inf
+                peak = np.unravel_index(np.nanargmax(sig), sig.shape)
+
+                print("peak at", peak, "of", sig[peak])
+
+                i, j = np.meshgrid(np.arange(sig.shape[0]), np.arange(sig.shape[1]))
+                c = i + 500 - peak[1], j + 500 - peak[0]
+                # c=i-(peak[0])+stacked_aligned.shape[0]/2,j-(peak[1])+stacked_aligned.shape[1]/2
+
+                print(i.max(), j.max())
+                stacked_aligned[c] += flux / var
+                stacked_aligned_var[c] += 1 / var
+
+            self.sens_stats_file = da.DataFile(sens_stats_fn)
+
+            stacked = "stacked_aligned_%.5lg_%.5lg.fits" % (ra, dec)
+            f = stacked_aligned / stacked_aligned_var
+            v = 1 / stacked_aligned_var
+            pyfits.PrimaryHDU(f / v ** 0.5).writeto(stacked, clobber=True)
+            setattr(self, stacked, da.DataFile(stacked))
+
+            stacked = "stacked_%.5lg_%.5lg.fits" % (ra, dec)
+            stacked_file.writeto(stacked, clobber=True)
+            self.stacked.append([(ra, dec), da.DataFile(stacked)])
+            setattr(self, stacked, da.DataFile(stacked))
+
+            mosaic = "mosaic_%.5lg_%.5lg.fits" % (ra, dec)
+            regionfile = mosaic.replace(".fits", ".reg")
+
+            ht = ddosa.heatool(
+                os.environ['COMMON_INTEGRAL_SOFTDIR'] + "/imaging/varmosaic/varmosaic_exposure/varmosaic")
+            ht['pixdivide'] = self.pixdivide
+            ht['filelist'] = listfile
+            ht['outimage'] = mosaic
+            ht['outregion'] = regionfile
+            ht.run()
+
+            self.mosaics.append([(ra, dec), da.DataFile(mosaic)])
+            setattr(self, mosaic, da.DataFile(mosaic))
+            setattr(self, regionfile, da.DataFile(regionfile))
+
+            self.skyima = da.DataFile(mosaic)  # store last
