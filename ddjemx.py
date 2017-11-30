@@ -98,6 +98,10 @@ class JEnergyBins(ddosa.DataAnalysis):
                     )
                 )
 
+class JEnergyBinsSpectra(ddosa.DataAnalysis):
+    pass
+
+
 class jemx_image(ddosa.DataAnalysis):
     input_scw=ddosa.ScWData
     input_ic=ddosa.ICRoot
@@ -269,7 +273,7 @@ class jemx_spe(ddosa.DataAnalysis):
     input_jemx=JEMX
     input_usercat=UserCat
     input_refcat=ddosa.GRcat
-    input_jbins=JEnergyBins
+    input_jbins=JEnergyBinsSpectra
 
     COR_gainModel=2
 
