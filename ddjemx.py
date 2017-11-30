@@ -627,9 +627,10 @@ class mosaic_src_loc(ddosa.DataAnalysis):
 
 
 
-class JMXSpectraGroups(ddosa.DataAnalysis):
+class JMXImageSpectraGroups(ddosa.DataAnalysis):
     input_scwlist=None
-    input_lc_processing=graphtools.Factorize(use_root='jemx_spe',use_leaves=["ScWData",])
+    input_spe_processing=graphtools.Factorize(use_root='jemx_spe',use_leaves=["ScWData",])
+    input_image_processing = graphtools.Factorize(use_root='jemx_image', use_leaves=["ScWData", ])
 
 
     allow_alias=True
@@ -640,12 +641,13 @@ class JMXSpectraGroups(ddosa.DataAnalysis):
     def construct_og(self,og_fn):
         scw_og_fns = []
 
-        for scw,spe in self.members:
+        for scw,image,spe in self.members:
             fn = "og_%s.fits" % scw.input_scwid.str()
             ddosa.construct_gnrl_scwg_grp(scw, children=
                 [
                     spe.spe.get_path(),
                     spe.arf.get_path(),
+                    image.srclres.get_path(),
                     scw.auxadppath + "/time_correlation.fits[AUXL-TCOR-HIS]",
                 ], fn=fn)
 
@@ -667,6 +669,7 @@ class JMXSpectraGroups(ddosa.DataAnalysis):
         self.members=[
             (
                 scw,
+                jemx_image(assume=[scw]),
                 jemx_spe(assume=[scw]),
             ) for scw in self.input_scwlist.scwlistdata
         ]
@@ -676,7 +679,7 @@ class JMXSpectraGroups(ddosa.DataAnalysis):
 
 
 class spe_pick(ddosa.DataAnalysis):
-    input_spegroups = JMXSpectraGroups
+    input_spegroups = JMXImageSpectraGroups
     input_jemx=JEMX
     source_names=["Crab"]
 

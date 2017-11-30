@@ -72,7 +72,7 @@ def test_spectra_groups():
     jb = ddjemx.JEnergyBins(use_bins=[(3, 10), (10, 30)])
     jb.promote()
 
-    groups = ddjemx.JMXSpectraGroups(input_scwlist=ddosa.IDScWList(
+    groups = ddjemx.JMXImageSpectraGroups(input_scwlist=ddosa.IDScWList(
                 use_scwid_list=["010200230010.001", "010200240010.001", "010200250010.001"])
     )
 
@@ -99,7 +99,7 @@ def test_spectra_grouped():
 
     groups = ddjemx.spe_pick(
                 use_source_names=["J053432.0+220052"],
-                input_spegroups=ddjemx.JMXSpectraGroups(input_scwlist=ddosa.IDScWList(
+                input_spegroups=ddjemx.JMXImageSpectraGroups(input_scwlist=ddosa.IDScWList(
                     use_scwid_list=["010200230010.001", "010200240010.001", "010200250010.001"])
     ))
 
