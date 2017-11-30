@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import ddosa
 import dataanalysis as da
 import os,time,shutil
@@ -52,6 +54,7 @@ class jemx_image(ddosa.DataAnalysis):
     input_scw=ddosa.ScWData
     input_ic=ddosa.ICRoot
     input_jemx=JEMX
+    input_refcat=ddosa.GRcat
 
     cached=True
 
@@ -78,6 +81,8 @@ class jemx_image(ddosa.DataAnalysis):
         ht['ogDOL']=self.input_jemx.get_og()
         ht['IC_Group']=self.input_ic.icindex
         ht['IC_Alias']="OSA"
+        ht['IC_Alias'] = "OSA"
+        ht['CAT_I_refCat'] = self.input_refcat.cat
         ht['startLevel']="COR"
         ht['endLevel']="IMA"
         ht['nChanBins']=-4
@@ -155,7 +160,7 @@ class inspect_image_results(ddosa.DataAnalysis):
 
     def main(self):
         for r in pyfits.open(self.input_image.srclres.get_path())[1].data:
-            print r['NAME'],r['DETSIG']
+            print(r['NAME'],r['DETSIG'])
         
 
 class inspect_image_results(ddosa.DataAnalysis):
@@ -163,7 +168,7 @@ class inspect_image_results(ddosa.DataAnalysis):
 
     def main(self):
         for r in pyfits.open(self.input_image.srclres.get_path())[1].data:
-            print r['NAME'],r['DETSIG']
+            print(r['NAME'],r['DETSIG'])
 
 class JEnergyBins(ddosa.DataAnalysis):
     nchanpow=-2
@@ -269,7 +274,7 @@ class ProcessJSpectra(ddosa.DataAnalysis):
         arfs_data=pyfits.open(self.input_spectrum.arf.get_path())[1].data
         for source_data in pyfits.open(self.input_spectrum.spe.get_path())[1].data:
             name=source_data['NAME']
-            print name,sum((source_data['RATE']/source_data['STAT_ERR'])**2)**0.5
+            print(name,sum((source_data['RATE']/source_data['STAT_ERR'])**2)**0.5)
             fn="jemx%i_spectrum_%s.fits"%(self.input_jmx.num,name.replace(" ","_"))
             heaspa.PHA(source_data['RATE'].astype(float64),source_data['STAT_ERR'].astype(float64),exposure=source_data['EXPOSURE'],datatype="RATE").write(fn)
 
