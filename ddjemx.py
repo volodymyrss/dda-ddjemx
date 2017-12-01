@@ -559,7 +559,7 @@ class mosaic_jemx(ddosa.DataAnalysis):
                 # aligned
                 flux = image_file[2].data
                 var = image_file[3].data
-                sig = image_file[4].data
+                sig = flux/var**0.5
                 var[np.isnan(var)] = np.inf
                 var[var == 0] = np.inf
                 peak = np.unravel_index(np.nanargmax(sig), sig.shape)
