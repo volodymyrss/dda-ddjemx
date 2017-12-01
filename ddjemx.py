@@ -436,7 +436,7 @@ class mosaic_jemx(ddosa.DataAnalysis):
 
     test_files = False
 
-    version = "v1.1"
+    version = "v1.2"
 
     def get_version(self):
         v = self.get_signature() + "." + self.version
@@ -613,6 +613,7 @@ class mosaic_jemx(ddosa.DataAnalysis):
             ht.run()
 
             self.skyres = da.DataFile(fn)
+            self.srclres = da.DataFile(fn)
 
 
 class mosaic_src_loc(ddosa.DataAnalysis):
