@@ -604,6 +604,7 @@ class mosaic_jemx(ddosa.DataAnalysis):
 
             self.skyima = da.DataFile(mosaic)  # store last
 
+            ddosa.remove_withtemplate("jmx_sloc_res.fits(JMX1-SLOC-RES.tpl)")
             fn = "jmx_sloc_res.fits"
             ht = ddosa.heatool("j_ima_src_locator")
             ht['inDOL'] = mosaic + "[2]"
