@@ -1,6 +1,8 @@
 from __future__ import print_function
 
 import numpy as np
+from copy import deepcopy
+import os
 
 import ddosa
 import pilton
@@ -633,11 +635,11 @@ class mosaic_src_loc(ddosa.DataAnalysis):
 
 
 
-class JMXImageSpectraGroups(ddosa.DataAnalysis):
+class JMXGroups(ddosa.DataAnalysis):
     input_scwlist=None
     input_spe_processing=graphtools.Factorize(use_root='jemx_spe',use_leaves=["ScWData",])
     input_image_processing = graphtools.Factorize(use_root='jemx_image', use_leaves=["ScWData", ])
-
+    input_jemx=JEMX
 
     allow_alias=True
     run_for_hashe=True
@@ -647,20 +649,31 @@ class JMXImageSpectraGroups(ddosa.DataAnalysis):
     def construct_og(self,og_fn):
         scw_og_fns = []
 
-        for scw,image,spe in self.members:
+        boundaries=[]
+
+        for members in self.members:
+            scw=members[0]
             fn = "og_%s.fits" % scw.input_scwid.str()
-            ddosa.construct_gnrl_scwg_grp(scw, children=
-                [
-                    spe.spe.get_path(),
-                    spe.arf.get_path(),
-                    image.srclres.get_path(),
-                    scw.auxadppath + "/time_correlation.fits[AUXL-TCOR-HIS]",
-                ], fn=fn)
+
+            children=[
+                scw.auxadppath + "/time_correlation.fits[AUXL-TCOR-HIS]",
+            ]
+
+            for m in members[1:]:
+                for option in ['spe','arf','srclres','skyima']:
+                    if hasattr(m,option):
+                        children.append(getattr(m,option).get_path())
+
+            ddosa.construct_gnrl_scwg_grp(scw, children=children, fn=fn)
 
             ddosa.import_attr(scw.scwpath + "/swg.fits",
                         ["OBTSTART", "OBTEND", "TSTART", "TSTOP", "SW_TYPE", "TELAPSE", "SWID", "SWBOUND"],fn)
             ddosa.set_attr({'ISDCLEVL': self.outtype}, fn)
-            ddosa.set_attr({'INSTRUME': "IBIS"}, fn)
+            ddosa.set_attr({'INSTRUME': self.input_jemx.get_NAME()}, fn)
+
+            h=fits.open(fn)[1].header
+            boundaries.append([h['TSTART'],h['TSTOP']])
+
 
             scw_og_fns.append(fn)
 
@@ -669,19 +682,39 @@ class JMXImageSpectraGroups(ddosa.DataAnalysis):
 
         ddosa.construct_og(["og_idx.fits"], fn=og_fn)
 
-        ddosa.set_attr({'ISDCLEVL': self.outtype}, og_fn)
+        ddosa.set_attr({'INSTRUME': self.input_jemx.get_NAME()}, og_fn)
+
+        ddosa.set_attr({'TSTART': min(zip(*boundaries)[0])}, og_fn)
+        ddosa.set_attr({'TSTOP': max(zip(*boundaries)[0])}, og_fn)
+
+        print("boundaries",boundaries)
 
     def main(self):
-        self.members=[
-            (
-                scw,
-                jemx_image(assume=[scw]),
-                jemx_spe(assume=[scw]),
-            ) for scw in self.input_scwlist.scwlistdata
-        ]
+        self.members = []
+        for scw in self.input_scwlist.scwlistdata:
+            self.members.append([scw])
+
+            for attachement in self.attachements:
+                self.members[-1].append(da.byname(attachement).__class__(assume=[scw]))
+
 
         if len(self.members)==0:
             raise ddosa.EmptyScWList()
+
+
+class JMXImageSpectraGroups(JMXGroups):
+    input_scwlist=None
+    input_spe_processing=graphtools.Factorize(use_root='jemx_spe',use_leaves=["ScWData",])
+    input_image_processing = graphtools.Factorize(use_root='jemx_image', use_leaves=["ScWData", ])
+
+    attachements=['jemx_image','jemx_spe']
+
+
+class JMXImageGroups(JMXGroups):
+    input_scwlist = None
+    input_image_processing = graphtools.Factorize(use_root='jemx_image', use_leaves=["ScWData", ])
+
+    attachements = ['jemx_image',]
 
 
 class spe_pick(ddosa.DataAnalysis):
@@ -722,3 +755,47 @@ class spe_pick(ddosa.DataAnalysis):
 
             setattr(self,'spectrum_'+source_name,da.DataFile(sumname+"_pha.fits"))
             setattr(self, 'arf_' + source_name, da.DataFile(sumname + "_arf.fits"))
+
+
+class mosaic_osa(ddosa.DataAnalysis):
+    input_groups = JMXImageGroups
+    input_jemx=JEMX
+    input_refcat = ddosa.GRcat
+    input_ic = ddosa.ICRoot
+
+    cached=True
+
+    def get_version(self):
+        return super(mosaic_osa, self).get_version()
+
+    def main(self):
+        self.input_groups.construct_og("ogg.fits")
+
+        dl=ddosa.heatool("dal_list")
+        dl['dol']="ogg.fits"
+        dl.run()
+
+        #ddosa.remove_withtemplate(fn+"(ISGR-SRC.-SPE-IDX.tpl)")
+
+        env=deepcopy(os.environ)
+        env['DISPLAY']=""
+
+        ht = ddosa.heatool("jemx_science_analysis",env=env)
+        ht['ogDOL'] = "ogg.fits"
+        ht['IC_Group']=self.input_ic.icindex
+        ht['jemxNum']=self.input_jemx.num
+        ht['CAT_I_refCat'] = self.input_refcat.cat
+        ht['startLevel']="IMA2"
+        ht['endLevel'] = "IMA2"
+        ht['skipLevels']=""
+        ht['chatter']=5
+        ht['IMA2_outfile']="jemx_osa_mosaic"
+        ht.run()
+
+        os.system("ls -ltor")
+
+        self.obsres=da.DataFile("jmx2_obs_res.fits")
+        self.srclres = da.DataFile("jmx2_obs_res.fits")
+        self.skyima = da.DataFile("jemx_osa_mosaic.fits")
+
+#        setattr(self, 'arf_' + source_name, da.DataFile(sumname + "_arf.fits"))
