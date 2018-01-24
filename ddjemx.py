@@ -779,6 +779,9 @@ class mosaic_osa(ddosa.DataAnalysis):
 
         env=deepcopy(os.environ)
         env['DISPLAY']=""
+        
+        ddosa.remove_withtemplate("jmx2_obs_res.fits")
+        ddosa.remove_withtemplate("jemx_osa_mosaic.fits")
 
         ht = ddosa.heatool("jemx_science_analysis",env=env)
         ht['ogDOL'] = "ogg.fits"
