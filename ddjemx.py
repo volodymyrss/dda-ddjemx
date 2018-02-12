@@ -766,7 +766,7 @@ class mosaic_osa(ddosa.DataAnalysis):
     cached=True
 
     def get_version(self):
-        return super(mosaic_osa, self).get_version()
+        return ddosa.DataAnalysis.get_version(self)
 
     def main(self):
         self.input_groups.construct_og("ogg.fits")
