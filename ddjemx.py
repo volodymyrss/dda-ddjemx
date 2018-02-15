@@ -810,6 +810,7 @@ class CallbackRareDDOSAFilter(dataanalysis.callback.Callback):
             scw=obj.cache.get_scw(obj._da_expected_full_hashe)
         return {"scwid":scw}
 
+import dataanalysis
 import dataanalysis.callback
 dataanalysis.callback.default_callback_filter=CallbackRareDDOSAFilter
 CallbackRareDDOSAFilter.set_callback_accepted_classes([mosaic_osa,mosaic_jemx,jemx_image])
