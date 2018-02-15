@@ -803,6 +803,9 @@ class mosaic_osa(ddosa.DataAnalysis):
 
 #        setattr(self, 'arf_' + source_name, da.DataFile(sumname + "_arf.fits"))
 
+import dataanalysis
+import dataanalysis.callback
+
 class CallbackRareDDOSAFilter(dataanalysis.callback.Callback):
     def extract_data(self,obj):
         scw=obj.cache.get_scw(obj._da_locally_complete)
@@ -810,7 +813,5 @@ class CallbackRareDDOSAFilter(dataanalysis.callback.Callback):
             scw=obj.cache.get_scw(obj._da_expected_full_hashe)
         return {"scwid":scw}
 
-import dataanalysis
-import dataanalysis.callback
 dataanalysis.callback.default_callback_filter=CallbackRareDDOSAFilter
 CallbackRareDDOSAFilter.set_callback_accepted_classes([mosaic_osa,mosaic_jemx,jemx_image])
