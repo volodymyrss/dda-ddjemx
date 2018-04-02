@@ -819,4 +819,4 @@ class CallbackRareDDOSAFilter(dataanalysis.callback.Callback):
         return {"scwid":scw}
 
 dataanalysis.callback.default_callback_filter=CallbackRareDDOSAFilter
-CallbackRareDDOSAFilter.set_callback_accepted_classes([mosaic_osa,mosaic_jemx,jemx_image])
+CallbackRareDDOSAFilter.set_callback_accepted_classes([mosaic_osa,mosaic_jemx,jemx_image,jemx_spe,jemx_lcr,spe_pick])
