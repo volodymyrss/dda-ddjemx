@@ -379,12 +379,14 @@ class ProcessJSpectra(ddosa.DataAnalysis):
 
 #j_rebin_rmf binlist=STD_016
 
-
+class jemx_image_by_scw(graphtools.Factorize):
+    root='jemx_image'
+    leaves=["ScWData",]
 
 class JMXScWImageList(ddosa.DataAnalysis):
     input_scwlist=None
     copy_cached_input=False
-    input_imagingsummary=graphtools.Factorize(use_root='jemx_image',use_leaves=["ScWData",])
+    input_imagingsummary=jemx_image_by_scw
 
 
     allow_alias=True
@@ -634,11 +636,14 @@ class mosaic_src_loc(ddosa.DataAnalysis):
         self.sloc_res=da.DataFile(fn)
 
 
+class jemx_spe_by_scw(graphtools.Factorize):
+    root='jemx_spe'
+    leaves=["ScWData",]
 
 class JMXGroups(ddosa.DataAnalysis):
     input_scwlist=None
-    input_spe_processing=graphtools.Factorize(use_root='jemx_spe',use_leaves=["ScWData",])
-    input_image_processing = graphtools.Factorize(use_root='jemx_image', use_leaves=["ScWData", ])
+    input_spe_processing=jemx_spe_by_scw
+    input_image_processing=jemx_image_by_scw
     input_jemx=JEMX
 
     allow_alias=True
@@ -704,15 +709,15 @@ class JMXGroups(ddosa.DataAnalysis):
 
 class JMXImageSpectraGroups(JMXGroups):
     input_scwlist=None
-    input_spe_processing=graphtools.Factorize(use_root='jemx_spe',use_leaves=["ScWData",])
-    input_image_processing = graphtools.Factorize(use_root='jemx_image', use_leaves=["ScWData", ])
+    input_spe_processing=jemx_spe_by_scw
+    input_image_processing = jemx_image_by_scw
 
     attachements=['jemx_image','jemx_spe']
 
 
 class JMXImageGroups(JMXGroups):
     input_scwlist = None
-    input_image_processing = graphtools.Factorize(use_root='jemx_image', use_leaves=["ScWData", ])
+    input_image_processing = jemx_image_by_scw
 
     attachements = ['jemx_image',]
 
