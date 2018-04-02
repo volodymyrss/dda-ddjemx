@@ -22,7 +22,7 @@ class ExceptionJ_SCW_NO_MINIMUM_DATA(da.AnalysisException):
     pass
 
 class JEMX(da.DataAnalysis):
-    num=2
+    num=1
 
     def get_version(self):
         return self.get_signature()+"."+self.version+".jmx%i.."%self.num
