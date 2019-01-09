@@ -348,7 +348,7 @@ class JRMF(ddosa.DataAnalysis):
     def main(self):
         code='STD_%.3i'%(2**(-self.input_jbins.nchanpow))
         fn='jemx_rmf_%s.fits'%code
-        os.system('j_rebin_rmf binlist=%s outfile=jemx_rmf_%s.fits'%(code,fn))
+        os.system('j_rebin_rmf binlist=%s outfile=%s'%(code,fn))
         self.rmf=da.DataFile(fn)
 
 class ProcessJSpectra(ddosa.DataAnalysis):
