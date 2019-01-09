@@ -774,7 +774,7 @@ class spe_pick(ddosa.DataAnalysis):
             import glob
             print(glob.glob("*"))
 
-            os.copy(self.input_rmf.rmf.get_path(), sumname + "_rmf.fits")
+            shutil.copy(self.input_rmf.rmf.get_path(), sumname + "_rmf.fits")
 
             setattr(self,'spectrum_'+source_name,da.DataFile(sumname+"_pha.fits"))
             setattr(self, 'arf_' + source_name, da.DataFile(sumname + "_arf.fits"))
