@@ -725,6 +725,8 @@ class JMXImageGroups(JMXGroups):
 class spe_pick(ddosa.DataAnalysis):
     input_spegroups = JMXImageSpectraGroups
     input_jemx=JEMX
+    input_rmf=JRMF
+
     source_names=["Crab"]
 
     cached=True
@@ -760,6 +762,7 @@ class spe_pick(ddosa.DataAnalysis):
 
             setattr(self,'spectrum_'+source_name,da.DataFile(sumname+"_pha.fits"))
             setattr(self, 'arf_' + source_name, da.DataFile(sumname + "_arf.fits"))
+            setattr(self, 'rmf_' + source_name, da.DataFile(self.input_rmf.rmf.get_path()))
 
 
 class mosaic_osa(ddosa.DataAnalysis):
