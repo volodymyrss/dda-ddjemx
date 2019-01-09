@@ -64,7 +64,7 @@ class UserCat(ddosa.DataAnalysis):
 
 
 class JEnergyBins(ddosa.DataAnalysis):
-    nchanpow=-2
+    nchanpow=-4
     input_ic=ddosa.ICRoot
 
     bins=None
