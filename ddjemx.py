@@ -3,6 +3,7 @@ from __future__ import print_function
 import numpy as np
 from copy import deepcopy
 import os
+import subprocess
 
 import ddosa
 import pilton
@@ -349,7 +350,7 @@ class JRMF(ddosa.DataAnalysis):
         code='STD_%.3i'%(2**(-self.input_jbins.nchanpow))
         fn='jemx_rmf_%s.fits'%code
 
-        env = deepcopy(environ)
+        env = deepcopy(os.environ)
         env['REP_BASE_PROD'] = env['CURRENT_IC']
 
         print("env",env)
