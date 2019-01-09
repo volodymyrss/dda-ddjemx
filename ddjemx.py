@@ -760,14 +760,16 @@ class spe_pick(ddosa.DataAnalysis):
             import glob
             print(glob.glob("*"))
 
+            os.copy(self.input_rmf.rmf.get_path(), sumname + "_rmf.fits")
+
             setattr(self,'spectrum_'+source_name,da.DataFile(sumname+"_pha.fits"))
             setattr(self, 'arf_' + source_name, da.DataFile(sumname + "_arf.fits"))
-            setattr(self, 'rmf_' + source_name, da.DataFile(self.input_rmf.rmf.get_path()))
+            setattr(self, 'rmf_' + source_name, da.DataFile(sumname + "_rmf.fits"))
 
 
 class mosaic_osa(ddosa.DataAnalysis):
     input_groups = JMXImageGroups
-    input_jemx=JEMX
+    input_jemx = JEMX
     input_refcat = ddosa.GRcat
     input_ic = ddosa.ICRoot
 
