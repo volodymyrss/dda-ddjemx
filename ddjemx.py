@@ -352,6 +352,8 @@ class JRMF(ddosa.DataAnalysis):
         env = deepcopy(environ)
         env['REP_BASE_PROD'] = env['CURRENT_IC']
 
+        print("env",env)
+
         subprocess.check_call(
                         [
                             'j_rebin_rmf',
