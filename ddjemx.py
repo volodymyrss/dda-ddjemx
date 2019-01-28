@@ -226,7 +226,12 @@ class jemx_lcr(ddosa.DataAnalysis):
         ht['LCR_timeStep']=self.tbin
         ht['COR_gainModel']=self.COR_gainModel
         ht['jemxNum']=self.input_jemx.num
-        ht.run()
+
+        try:
+            ht.run()
+        except pilton.HEAToolException as ex:
+            if 'J_SCW_NO_MINIMUM_DATA' in ht.output:
+                raise ExceptionJ_SCW_NO_MINIMUM_DATA(dict(scw=self.input_scw.scwid,jemx=self.input_jemx.get_name()))
 
         name=self.input_jemx.get_name()
         scwpath=ht.cwd+"/scw/"+self.input_scw.scwid
@@ -331,7 +336,12 @@ class jemx_spe(ddosa.DataAnalysis):
         #ht['LCR_timeStep']=self.tbin
         ht['COR_gainModel']=self.COR_gainModel
         ht['jemxNum']=self.input_jemx.num
-        ht.run()
+        
+        try:
+            ht.run()
+        except pilton.HEAToolException as ex:
+            if 'J_SCW_NO_MINIMUM_DATA' in ht.output:
+                raise ExceptionJ_SCW_NO_MINIMUM_DATA(dict(scw=self.input_scw.scwid,jemx=self.input_jemx.get_name()))
 
         name=self.input_jemx.get_name()
         scwpath=ht.cwd+"/scw/"+self.input_scw.scwid
@@ -344,6 +354,8 @@ class jemx_spe(ddosa.DataAnalysis):
 
 class JRMF(ddosa.DataAnalysis):
     input_jbins=JEnergyBins
+    input_jmx=JEMX
+
     cached=True
 
     def main(self):
@@ -359,7 +371,8 @@ class JRMF(ddosa.DataAnalysis):
                         [
                             'j_rebin_rmf',
                             'binlist=%s'%code,
-                            'outfile=%s'%fn
+                            'outfile=%s'%fn,
+                            'jemx_num=%i'%self.input_jmx.num
                         ],
                         env=env,
                     )
@@ -776,9 +789,14 @@ class spe_pick(ddosa.DataAnalysis):
 
             shutil.copy(self.input_rmf.rmf.get_path(), sumname + "_rmf.fits")
 
-            setattr(self,'spectrum_'+source_name,da.DataFile(sumname+"_pha.fits"))
-            setattr(self, 'arf_' + source_name, da.DataFile(sumname + "_arf.fits"))
-            setattr(self, 'rmf_' + source_name, da.DataFile(sumname + "_rmf.fits"))
+            if os.path.exists(sumname+"_pha.fits"):
+                setattr(self,'spectrum_'+source_name,da.DataFile(sumname+"_pha.fits"))
+
+            if os.path.exists(sumname+"_arf.fits"):
+                setattr(self, 'arf_' + source_name, da.DataFile(sumname + "_arf.fits"))
+
+            if os.path.exists(sumname+"_rmf.fits"):
+                setattr(self, 'rmf_' + source_name, da.DataFile(sumname + "_rmf.fits"))
 
 
 class mosaic_osa(ddosa.DataAnalysis):
