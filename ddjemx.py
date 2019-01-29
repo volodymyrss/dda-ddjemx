@@ -358,6 +358,8 @@ class JRMF(ddosa.DataAnalysis):
 
     cached=True
 
+    version="v1"
+
     def main(self):
         code='STD_%.3i'%(2**(-self.input_jbins.nchanpow))
         fn='jemx_rmf_%s.fits'%code
