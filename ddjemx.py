@@ -775,7 +775,14 @@ class spe_pick(ddosa.DataAnalysis):
 
         for source_name in self.source_names:
             sumname = "spec_%s" % source_name.replace(" ","_")
-            #ddosa.remove_withtemplate(fn+"(ISGR-SRC.-SPE-IDX.tpl)")
+            singlename = source_name+"_JMX%i_single_pha2.fits"%self.input_jemx.num
+            singlearfname = source_name+"_JMX%i_single_arf2.fits"%self.input_jemx.num
+
+            ddosa.remove_withtemplate(singlename+"(JMX%i-PHA2-SPE.tpl)"%self.input_jemx.num)
+            ddosa.remove_withtemplate(singlearfname+"(JMX%i-PHA2-ARF.tpl)"%self.input_jemx.num)
+            ddosa.remove_withtemplate(sumname+"_pha.fits(JMX%i-PHA1-SPE.tpl)"%self.input_jemx.num)
+            ddosa.remove_withtemplate(sumname+"_arf.fits(JMX%i-PHA1-ARF.tpl)"%self.input_jemx.num)
+            
 
             ht = ddosa.heatool("spe_pick")
             ht['group'] = "ogg.fits[1]"
