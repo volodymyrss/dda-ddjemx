@@ -367,13 +367,19 @@ class JRMF(ddosa.DataAnalysis):
 
         print("env",env)
 
+        ddosa.remove_withtemplate(fn+"(JMX-RMF.tpl)")
+
+        cmd = [
+                'j_rebin_rmf',
+                'binlist=%s'%code,
+                'outfile=%s'%fn,
+                'jemx_num=%i'%self.input_jmx.num
+            ]
+
+        print("running"," ".join(cmd))
+
         subprocess.check_call(
-                        [
-                            'j_rebin_rmf',
-                            'binlist=%s'%code,
-                            'outfile=%s'%fn,
-                            'jemx_num=%i'%self.input_jmx.num
-                        ],
+                        cmd,
                         env=env,
                     )
         self.rmf=da.DataFile(fn)
@@ -794,7 +800,7 @@ class spe_pick(ddosa.DataAnalysis):
             import glob
             print(glob.glob("*"))
 
-            shutil.copy(self.input_rmf.rmf.get_path(), sumname + "_rmf.fits")
+            fits.open(self.input_rmf.rmf.get_path()).writeto(sumname + "_rmf.fits", overwrite=True)
 
             if os.path.exists(sumname+"_pha.fits"):
                 setattr(self,'spectrum_'+source_name,da.DataFile(sumname+"_pha.fits"))
