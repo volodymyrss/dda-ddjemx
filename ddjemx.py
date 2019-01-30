@@ -776,7 +776,7 @@ class spe_pick(ddosa.DataAnalysis):
     input_jemx=JEMX
     input_rmf=JRMF
 
-    source_names=["Crab"]
+    source_names=["Crab","J053432.0+220052"]
 
     cached=True
 
@@ -831,7 +831,8 @@ class lc_pick(ddosa.DataAnalysis):
     input_lcgroups = JMXImageLCGroups
     input_jemx=JEMX
 
-    source_names=["Crab"]
+    #source_names=["Crab","J053432.0+220052"]
+    source_names=["J053432.0+220052"]
 
     cached=True
 
