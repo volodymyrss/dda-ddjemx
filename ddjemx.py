@@ -61,7 +61,10 @@ class UserCat(ddosa.DataAnalysis):
 
         self.cat=da.DataFile(fn)
 
+class LCTimeBin(ddosa.DataAnalysis):
+    timebin_s=100
 
+    _da_settings=['timebin_s']
 
 class JEnergyBins(ddosa.DataAnalysis):
     nchanpow=-4
@@ -175,12 +178,12 @@ class jemx_lcr(ddosa.DataAnalysis):
     input_jemx=JEMX
     input_refcat=ddosa.GRcat
     input_jbins=JEnergyBinsLC
+    input_timebin=LCTimeBin
 
-    tbin=100
     COR_gainModel=2
 
     def get_version(self):
-        v=self.get_signature()+"."+self.version+".tb%.5lg"%self.tbin
+        v=self.get_signature()+"."+self.version
         if self.COR_gainModel!=1:
             v+=".gM%i"%self.COR_gainModel
         return v
@@ -227,7 +230,7 @@ class jemx_lcr(ddosa.DataAnalysis):
             ht['chanLow'] = " ".join(["%i" % bin['chmin'] for bin in self.input_jbins.bin_interpretation])
             ht['chanHigh'] = " ".join(["%i" % bin['chmax'] for bin in self.input_jbins.bin_interpretation])
 
-        ht['LCR_timeStep']=self.tbin
+        ht['LCR_timeStep']=self.input_timebin.timebin_s
         ht['COR_gainModel']=self.COR_gainModel
         ht['jemxNum']=self.input_jemx.num
 
