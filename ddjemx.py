@@ -836,6 +836,8 @@ class lc_pick(ddosa.DataAnalysis):
 
     cached=True
 
+    version="v1"
+
     def get_version(self):
         try:
             return super(lc_pick, self).get_version()+"."+(".".join([m.replace(" ","_") for m in self.source_names]))
