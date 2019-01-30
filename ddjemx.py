@@ -776,7 +776,7 @@ class spe_pick(ddosa.DataAnalysis):
     input_jemx=JEMX
     input_rmf=JRMF
 
-    source_names=["Crab","J053432.0+220052"]
+    source_names=["Crab"]
 
     cached=True
 
@@ -831,8 +831,8 @@ class lc_pick(ddosa.DataAnalysis):
     input_lcgroups = JMXImageLCGroups
     input_jemx=JEMX
 
-    #source_names=["Crab","J053432.0+220052"]
-    source_names=["J053432.0+220052"]
+    source_names=["Crab"]
+    source_ids=["J053432.0+220052"]
 
     cached=True
 
@@ -851,7 +851,7 @@ class lc_pick(ddosa.DataAnalysis):
 
         assert len(self.source_names)==1
 
-        for source_name in self.source_names:
+        for source_name, source_id in zip(self.source_names,self.source_ids):
             sumname = "lc_%s" % source_name.replace(" ","_")
 
             ddosa.remove_withtemplate(sumname+".fits")
@@ -859,7 +859,7 @@ class lc_pick(ddosa.DataAnalysis):
 
             ht = ddosa.heatool("lc_pick")
             ht['group'] = "ogg.fits[1]"
-            ht['source']=source_name
+            ht['source']=source_id
             ht['instrument']=self.input_jemx.get_name()
             ht['lc']=sumname
             ht.run()
