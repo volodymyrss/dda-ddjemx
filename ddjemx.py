@@ -104,6 +104,8 @@ class JEnergyBins(ddosa.DataAnalysis):
 class JEnergyBinsSpectra(JEnergyBins):
     pass
 
+class JEnergyBinsLC(JEnergyBins):
+    nchanpow=-1
 
 class jemx_image(ddosa.DataAnalysis):
     input_scw=ddosa.ScWData
@@ -171,6 +173,8 @@ class jemx_lcr(ddosa.DataAnalysis):
     input_scw=ddosa.ScWData
     input_ic=ddosa.ICRoot
     input_jemx=JEMX
+    input_refcat=ddosa.GRcat
+    input_jbins=JEnergyBinsLC
 
     tbin=100
     COR_gainModel=2
@@ -675,6 +679,10 @@ class jemx_spe_by_scw(graphtools.Factorize):
     root='jemx_spe'
     leaves=["ScWData",]
 
+class jemx_lcr_by_scw(graphtools.Factorize):
+    root='jemx_lcr'
+    leaves=["ScWData",]
+
 class JMXGroups(ddosa.DataAnalysis):
     input_scwlist=None
     input_spe_processing=jemx_spe_by_scw
@@ -700,7 +708,7 @@ class JMXGroups(ddosa.DataAnalysis):
             ]
 
             for m in members[1:]:
-                for option in ['spe','arf','srclres','skyima']:
+                for option in ['spe','arf','srclres','skyima','lcr']:
                     if hasattr(m,option):
                         children.append(getattr(m,option).get_path())
 
@@ -744,11 +752,17 @@ class JMXGroups(ddosa.DataAnalysis):
 
 class JMXImageSpectraGroups(JMXGroups):
     input_scwlist=None
-    input_spe_processing=jemx_spe_by_scw
+    input_spe_processing = jemx_spe_by_scw
     input_image_processing = jemx_image_by_scw
 
     attachements=['jemx_image','jemx_spe']
 
+class JMXImageLCGroups(JMXGroups):
+    input_scwlist=None
+    input_lcr_processing = jemx_lcr_by_scw
+    input_image_processing = jemx_image_by_scw
+
+    attachements=['jemx_image','jemx_lcr']
 
 class JMXImageGroups(JMXGroups):
     input_scwlist = None
@@ -812,6 +826,50 @@ class spe_pick(ddosa.DataAnalysis):
 
             if os.path.exists(sumname+"_rmf.fits"):
                 setattr(self, 'rmf_' + source_name, da.DataFile(sumname + "_rmf.fits"))
+
+class lc_pick(ddosa.DataAnalysis):
+    input_lcgroups = JMXImageLCGroups
+    input_jemx=JEMX
+
+    source_names=["Crab"]
+
+    cached=True
+
+    def get_version(self):
+        try:
+            return super(lc_pick, self).get_version()+"."+(".".join([m.replace(" ","_") for m in self.source_names]))
+        except:
+            return "lc_pick.UNDEFINED"
+
+    def main(self):
+        self.input_lcgroups.construct_og("ogg.fits")
+
+        dl=ddosa.heatool("dal_list")
+        dl['dol']="ogg.fits"
+        dl.run()
+
+        assert len(self.source_names)==1
+
+        for source_name in self.source_names:
+            sumname = "lc_%s" % source_name.replace(" ","_")
+
+            ddosa.remove_withtemplate(sumname+".fits")
+            
+
+            ht = ddosa.heatool("lc_pick")
+            ht['group'] = "ogg.fits[1]"
+            ht['source']=source_name
+            ht['instrument']=self.input_jemx.get_name()
+            ht['lc']=sumname
+            ht.run()
+
+            import glob
+            print(glob.glob("*"))
+
+            #fits.open(self.input_rmf.rmf.get_path()).writeto(sumname + "_rmf.fits", overwrite=True)
+
+            if os.path.exists(sumname+".fits"):
+                setattr(self,sumname,da.DataFile(sumname+".fits"))
 
 
 class mosaic_osa(ddosa.DataAnalysis):
