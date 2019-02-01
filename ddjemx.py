@@ -654,7 +654,7 @@ class mosaic_jemx(ddosa.DataAnalysis):
             fn = "jmx_sloc_res.fits"
             ht = ddosa.heatool("j_ima_src_locator")
             ht['inDOL'] = mosaic + "[2]"
-            ht['sigDOL'] = mosaic + "[3]"
+            ht['sigDOL'] = mosaic + "[4]"
             ht['outFile'] = fn
             ht.run()
 
@@ -901,7 +901,7 @@ class mosaic_osa(ddosa.DataAnalysis):
         env=deepcopy(os.environ)
         env['DISPLAY']=""
         
-        ddosa.remove_withtemplate("jmx2_obs_res.fits")
+        ddosa.remove_withtemplate(self.input_jemx.get_name()+"_obs_res.fits")
         ddosa.remove_withtemplate("jemx_osa_mosaic.fits")
 
         ht = ddosa.heatool("jemx_science_analysis",env=env)
@@ -918,8 +918,8 @@ class mosaic_osa(ddosa.DataAnalysis):
 
         os.system("ls -ltor")
 
-        self.obsres=da.DataFile("jmx2_obs_res.fits")
-        self.srclres = da.DataFile("jmx2_obs_res.fits")
+        self.obsres=da.DataFile(self.input_jemx.get_name()+"_obs_res.fits")
+        self.srclres = da.DataFile(self.input_jemx.get_name()+"_obs_res.fits")
         self.skyima = da.DataFile("jemx_osa_mosaic.fits")
 
 #        setattr(self, 'arf_' + source_name, da.DataFile(sumname + "_arf.fits"))
