@@ -878,7 +878,7 @@ class lc_pick(ddosa.DataAnalysis):
                 setattr(self,sumname,da.DataFile(sumname+".fits"))
 
 
-class mosaic_osa(ddosa.DataAnalysis):
+class mosaic_jemx_osa(ddosa.DataAnalysis):
     input_groups = JMXImageGroups
     input_jemx = JEMX
     input_refcat = ddosa.GRcat
@@ -935,4 +935,4 @@ class CallbackRareDDOSAFilter(dataanalysis.callback.Callback):
         return {"scwid":scw}
 
 dataanalysis.callback.default_callback_filter=CallbackRareDDOSAFilter
-CallbackRareDDOSAFilter.set_callback_accepted_classes([mosaic_osa,mosaic_jemx,jemx_image,jemx_spe,jemx_lcr,spe_pick,lc_pick])
+CallbackRareDDOSAFilter.set_callback_accepted_classes([mosaic_jemx_osa,mosaic_jemx,jemx_image,jemx_spe,jemx_lcr,spe_pick,lc_pick])
