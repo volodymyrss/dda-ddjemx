@@ -918,9 +918,12 @@ class mosaic_jemx_osa(ddosa.DataAnalysis):
 
         os.system("ls -ltor")
 
-        self.obsres=da.DataFile(self.input_jemx.get_name()+"_obs_res.fits")
-        self.srclres = da.DataFile(self.input_jemx.get_name()+"_obs_res.fits")
-        self.skyima = da.DataFile("jemx_osa_mosaic.fits")
+        if os.path.exists(self.input_jemx.get_name()+"_obs_res.fits"):
+            self.obsres = da.DataFile(self.input_jemx.get_name()+"_obs_res.fits")
+            self.srclres = da.DataFile(self.input_jemx.get_name()+"_obs_res.fits")
+
+        if os.path.exists("jemx_osa_mosaic.fits"):
+            self.skyima = da.DataFile("jemx_osa_mosaic.fits")
 
 #        setattr(self, 'arf_' + source_name, da.DataFile(sumname + "_arf.fits"))
 
