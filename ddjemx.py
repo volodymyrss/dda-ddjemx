@@ -22,6 +22,9 @@ except:
 class ExceptionJ_SCW_NO_MINIMUM_DATA(da.AnalysisException):
     pass
 
+class ExceptionNoImageProduced(da.AnalysisException):
+    pass
+
 class JEMX(da.DataAnalysis):
     num=1
 
@@ -165,11 +168,19 @@ class jemx_image(ddosa.DataAnalysis):
 
 
         name=self.input_jemx.get_name()
-        shutil.copy(ht.cwd+"/scw/"+self.input_scw.scwid+"/"+name+"_sky_ima.fits","./"+name+"_sky_ima.fits")
-        shutil.copy(ht.cwd+"/scw/"+self.input_scw.scwid+"/"+name+"_srcl_res.fits","./"+name+"_srcl_res.fits")
+
+        skyima_fn = ht.cwd+"/scw/"+self.input_scw.scwid+"/"+name+"_sky_ima.fits"
+
+        skyres_fn = ht.cwd+"/scw/"+self.input_scw.scwid+"/"+name+"_srcl_res.fits"
         
-        self.skyima=da.DataFile(name+"_sky_ima.fits")
-        self.srclres=da.DataFile(name+"_srcl_res.fits")
+        if os.path.exists(skyima_fn) and os.path.exists(skyres_fn):
+            shutil.copy(skyima_fn, "./"+name+"_sky_ima.fits")
+            shutil.copy(skyres_fn, "./"+name+"_srcl_res.fits")
+            
+            self.skyima=da.DataFile(name+"_sky_ima.fits")
+            self.srclres=da.DataFile(name+"_srcl_res.fits") 
+        else:
+            raise ExceptionNoImageProduced(dict(scw=self.input_scw.scwid,jemx=self.input_jemx.get_name()))
 
 
 class jemx_lcr(ddosa.DataAnalysis):
