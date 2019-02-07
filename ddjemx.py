@@ -185,8 +185,8 @@ class jemx_image(ddosa.DataAnalysis):
             
             self.skyima=da.DataFile(name+"_sky_ima.fits")
             self.srclres=da.DataFile(name+"_srcl_res.fits") 
-        else:
-            raise ExceptionNoImageProduced(dict(scw=self.input_scw.scwid,jemx=self.input_jemx.get_name()))
+        #else:
+        #    raise ExceptionNoImageProduced(dict(scw=self.input_scw.scwid,jemx=self.input_jemx.get_name()))
 
 
 class jemx_lcr(ddosa.DataAnalysis):
@@ -266,8 +266,8 @@ class jemx_lcr(ddosa.DataAnalysis):
             shutil.copy(lc, "./"+name+"_src_lc.fits")
         
             self.lcr=da.DataFile(name+"_src_lc.fits")
-        else:
-            raise ExceptionNoLCProduced()
+        #else:
+        #    raise ExceptionNoLCProduced()
 
 
 class inspect_image_results(ddosa.DataAnalysis):
@@ -384,8 +384,8 @@ class jemx_spe(ddosa.DataAnalysis):
         
             self.spe=da.DataFile(name+"_srcl_spe.fits")
             self.arf=da.DataFile(name+"_srcl_arf.fits")
-        else:
-            raise ExceptionNoSpectraProduced()
+#        else:
+            #raise ExceptionNoSpectraProduced()
 
 class JRMF(ddosa.DataAnalysis):
     input_jbins=JEnergyBins
