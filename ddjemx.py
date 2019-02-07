@@ -375,8 +375,8 @@ class jemx_spe(ddosa.DataAnalysis):
         name=self.input_jemx.get_name()
         scwpath=ht.cwd+"/scw/"+self.input_scw.scwid
 
-        srcl_spe = scwpath+"/"+name+"_srcl_spe.fits","./"+name+"_srcl_spe.fits"
-        srcl_arf = scwpath+"/"+name+"_srcl_arf.fits","./"+name+"_srcl_arf.fits"
+        srcl_spe = scwpath+"/"+name+"_srcl_spe.fits"
+        srcl_arf = scwpath+"/"+name+"_srcl_arf.fits"
 
         if os.path.exists(srcl_spe) and os.path.exits(srcl_arf):
             shutil.copy(srcl_spe, name+"_srcl_spe.fits")
