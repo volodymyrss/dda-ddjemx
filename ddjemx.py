@@ -860,7 +860,7 @@ class spe_pick(ddosa.DataAnalysis):
 
 class lc_pick(ddosa.DataAnalysis):
     input_lcgroups = JMXImageLCGroups
-    input_jemx=JE()MX
+    input_jemx=JEMX
 
     source_names=["Crab"]
     source_ids=["J053432.0+220052"]
