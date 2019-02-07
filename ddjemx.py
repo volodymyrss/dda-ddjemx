@@ -25,6 +25,12 @@ class ExceptionJ_SCW_NO_MINIMUM_DATA(da.AnalysisException):
 class ExceptionNoImageProduced(da.AnalysisException):
     pass
 
+class ExceptionNoSpectraProduced(da.AnalysisException):
+    pass
+
+class ExceptionNoLCProduced(da.AnalysisException):
+    pass
+
 class JEMX(da.DataAnalysis):
     num=1
 
@@ -253,10 +259,15 @@ class jemx_lcr(ddosa.DataAnalysis):
 
         name=self.input_jemx.get_name()
         scwpath=ht.cwd+"/scw/"+self.input_scw.scwid
-        shutil.copy(scwpath+"/"+name+"_src_lc.fits","./"+name+"_src_lc.fits")
+
+        lc = scwpath+"/"+name+"_src_lc.fits"
+
+        if os.path.exits(lc):
+            shutil.copy(lc, "./"+name+"_src_lc.fits")
         
-        self.lcr=da.DataFile(name+"_src_lc.fits")
-        # store the rest??
+            self.lcr=da.DataFile(name+"_src_lc.fits")
+        else:
+            raise ExceptionNoLCProduced()
 
 
 class inspect_image_results(ddosa.DataAnalysis):
@@ -363,12 +374,18 @@ class jemx_spe(ddosa.DataAnalysis):
 
         name=self.input_jemx.get_name()
         scwpath=ht.cwd+"/scw/"+self.input_scw.scwid
-        shutil.copy(scwpath+"/"+name+"_srcl_spe.fits","./"+name+"_srcl_spe.fits")
-        shutil.copy(scwpath+"/"+name+"_srcl_arf.fits","./"+name+"_srcl_arf.fits")
+
+        srcl_spe = scwpath+"/"+name+"_srcl_spe.fits","./"+name+"_srcl_spe.fits"
+        srcl_arf = scwpath+"/"+name+"_srcl_arf.fits","./"+name+"_srcl_arf.fits"
+
+        if os.path.exists(srcl_spe) and os.path.exits(srcl_arf):
+            shutil.copy(srcl_spe, name+"_srcl_spe.fits")
+            shutil.copy(srcl_arf, name+"_srcl_arf.fits")
         
-        self.spe=da.DataFile(name+"_srcl_spe.fits")
-        self.arf=da.DataFile(name+"_srcl_arf.fits")
-        # store the rest??
+            self.spe=da.DataFile(name+"_srcl_spe.fits")
+            self.arf=da.DataFile(name+"_srcl_arf.fits")
+        else:
+            raise ExceptionNoSpectraProduced()
 
 class JRMF(ddosa.DataAnalysis):
     input_jbins=JEnergyBins
@@ -843,7 +860,7 @@ class spe_pick(ddosa.DataAnalysis):
 
 class lc_pick(ddosa.DataAnalysis):
     input_lcgroups = JMXImageLCGroups
-    input_jemx=JEMX
+    input_jemx=JE()MX
 
     source_names=["Crab"]
     source_ids=["J053432.0+220052"]
