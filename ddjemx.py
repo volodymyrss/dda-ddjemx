@@ -263,7 +263,7 @@ class jemx_lcr(ddosa.DataAnalysis):
 
         lc = scwpath+"/"+name+"_src_lc.fits"
 
-        if os.path.exits(lc):
+        if os.path.exists(lc):
             shutil.copy(lc, "./"+name+"_src_lc.fits")
         
             self.lcr=da.DataFile(name+"_src_lc.fits")
@@ -380,7 +380,7 @@ class jemx_spe(ddosa.DataAnalysis):
         srcl_spe = scwpath+"/"+name+"_srcl_spe.fits"
         srcl_arf = scwpath+"/"+name+"_srcl_arf.fits"
 
-        if os.path.exists(srcl_spe) and os.path.exits(srcl_arf):
+        if os.path.exists(srcl_spe) and os.path.exists(srcl_arf):
             shutil.copy(srcl_spe, name+"_srcl_spe.fits")
             shutil.copy(srcl_arf, name+"_srcl_arf.fits")
         
