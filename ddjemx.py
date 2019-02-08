@@ -304,7 +304,7 @@ class DetectISDCENV(da.DataAnalysis):
         return ie
 
 class jemx_spe(ddosa.DataAnalysis):
-    input_isdcenv=DetectISDCENV
+#    input_isdcenv=DetectISDCENV
 
     input_scw=ddosa.ScWData
     input_ic=ddosa.ICRoot
