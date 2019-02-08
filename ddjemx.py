@@ -960,12 +960,34 @@ class mosaic_jemx_osa(ddosa.DataAnalysis):
 import dataanalysis
 import dataanalysis.callback
 
+#dataanalysis.callback.default_callback_filter=CallbackRareDDOSAFilter
+
+previously_accepted_classes=dataanalysis.callback.default_callback_filter.callback_accepted_classes
+
 class CallbackRareDDOSAFilter(dataanalysis.callback.Callback):
     def extract_data(self,obj):
+        data={'scwid':'inapplicable',}
+
         scw=obj.cache.get_scw(obj._da_locally_complete)
+        
+        expected_hashe=getattr(obj,'_da_expected_full_hashe',None)
+
+        if expected_hashe is not None:
+            data['node_id']=obj.cache.hashe2signature(expected_hashe)
+        else:
+            data['node_id']="undefined_expected_hashe_please_complain" # add sentry
+
         if scw is None:
-            scw=obj.cache.get_scw(obj._da_expected_full_hashe)
-        return {"scwid":scw}
+            scw=obj.cache.get_scw(expected_hashe)
+
+        if scw is not None:
+            data.update({"scwid":scw})
+
+        return data
 
 dataanalysis.callback.default_callback_filter=CallbackRareDDOSAFilter
+
+if previously_accepted_classes is not None:
+    dataanalysis.callback.default_callback_filter.set_callback_accepted_classes(previously_accepted_classes)
+
 CallbackRareDDOSAFilter.set_callback_accepted_classes([mosaic_jemx_osa,mosaic_jemx,jemx_image,jemx_spe,jemx_lcr,spe_pick,lc_pick])
