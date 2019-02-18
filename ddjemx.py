@@ -22,6 +22,15 @@ except:
 class ExceptionJ_SCW_NO_MINIMUM_DATA(da.AnalysisException):
     pass
 
+class ExceptionNoImageProduced(da.AnalysisException):
+    pass
+
+class ExceptionNoSpectraProduced(da.AnalysisException):
+    pass
+
+class ExceptionNoLCProduced(da.AnalysisException):
+    pass
+
 class JEMX(da.DataAnalysis):
     num=1
 
@@ -119,7 +128,7 @@ class jemx_image(ddosa.DataAnalysis):
 
     cached=True
 
-    version="v2.1"
+    version="v2.2"
 
     def main(self):
         open("scw.list","w").write(self.input_scw.swgpath+"[1]")
@@ -165,11 +174,19 @@ class jemx_image(ddosa.DataAnalysis):
 
 
         name=self.input_jemx.get_name()
-        shutil.copy(ht.cwd+"/scw/"+self.input_scw.scwid+"/"+name+"_sky_ima.fits","./"+name+"_sky_ima.fits")
-        shutil.copy(ht.cwd+"/scw/"+self.input_scw.scwid+"/"+name+"_srcl_res.fits","./"+name+"_srcl_res.fits")
+
+        skyima_fn = ht.cwd+"/scw/"+self.input_scw.scwid+"/"+name+"_sky_ima.fits"
+
+        skyres_fn = ht.cwd+"/scw/"+self.input_scw.scwid+"/"+name+"_srcl_res.fits"
         
-        self.skyima=da.DataFile(name+"_sky_ima.fits")
-        self.srclres=da.DataFile(name+"_srcl_res.fits")
+        if os.path.exists(skyima_fn) and os.path.exists(skyres_fn):
+            shutil.copy(skyima_fn, "./"+name+"_sky_ima.fits")
+            shutil.copy(skyres_fn, "./"+name+"_srcl_res.fits")
+            
+            self.skyima=da.DataFile(name+"_sky_ima.fits")
+            self.srclres=da.DataFile(name+"_srcl_res.fits") 
+        #else:
+        #    raise ExceptionNoImageProduced(dict(scw=self.input_scw.scwid,jemx=self.input_jemx.get_name()))
 
 
 class jemx_lcr(ddosa.DataAnalysis):
@@ -190,7 +207,8 @@ class jemx_lcr(ddosa.DataAnalysis):
 
     cached=True
 
-    version="v1"
+    version="v1.1"
+
     def main(self):
         open("scw.list","w").write(self.input_scw.swgpath+"[1]")
 
@@ -242,10 +260,15 @@ class jemx_lcr(ddosa.DataAnalysis):
 
         name=self.input_jemx.get_name()
         scwpath=ht.cwd+"/scw/"+self.input_scw.scwid
-        shutil.copy(scwpath+"/"+name+"_src_lc.fits","./"+name+"_src_lc.fits")
+
+        lc = scwpath+"/"+name+"_src_lc.fits"
+
+        if os.path.exists(lc):
+            shutil.copy(lc, "./"+name+"_src_lc.fits")
         
-        self.lcr=da.DataFile(name+"_src_lc.fits")
-        # store the rest??
+            self.lcr=da.DataFile(name+"_src_lc.fits")
+        #else:
+        #    raise ExceptionNoLCProduced()
 
 
 class inspect_image_results(ddosa.DataAnalysis):
@@ -281,7 +304,7 @@ class DetectISDCENV(da.DataAnalysis):
         return ie
 
 class jemx_spe(ddosa.DataAnalysis):
-    input_isdcenv=DetectISDCENV
+#    input_isdcenv=DetectISDCENV
 
     input_scw=ddosa.ScWData
     input_ic=ddosa.ICRoot
@@ -300,7 +323,8 @@ class jemx_spe(ddosa.DataAnalysis):
 
     cached=True
 
-    version="v1"
+    version="v1.1"
+
     def main(self):
         open("scw.list","w").write(self.input_scw.swgpath+"[1]")
 
@@ -352,12 +376,18 @@ class jemx_spe(ddosa.DataAnalysis):
 
         name=self.input_jemx.get_name()
         scwpath=ht.cwd+"/scw/"+self.input_scw.scwid
-        shutil.copy(scwpath+"/"+name+"_srcl_spe.fits","./"+name+"_srcl_spe.fits")
-        shutil.copy(scwpath+"/"+name+"_srcl_arf.fits","./"+name+"_srcl_arf.fits")
+
+        srcl_spe = scwpath+"/"+name+"_srcl_spe.fits"
+        srcl_arf = scwpath+"/"+name+"_srcl_arf.fits"
+
+        if os.path.exists(srcl_spe) and os.path.exists(srcl_arf):
+            shutil.copy(srcl_spe, name+"_srcl_spe.fits")
+            shutil.copy(srcl_arf, name+"_srcl_arf.fits")
         
-        self.spe=da.DataFile(name+"_srcl_spe.fits")
-        self.arf=da.DataFile(name+"_srcl_arf.fits")
-        # store the rest??
+            self.spe=da.DataFile(name+"_srcl_spe.fits")
+            self.arf=da.DataFile(name+"_srcl_arf.fits")
+#        else:
+            #raise ExceptionNoSpectraProduced()
 
 class JRMF(ddosa.DataAnalysis):
     input_jbins=JEnergyBins
@@ -945,12 +975,34 @@ class mosaic_jemx_osa(ddosa.DataAnalysis):
 import dataanalysis
 import dataanalysis.callback
 
+#dataanalysis.callback.default_callback_filter=CallbackRareDDOSAFilter
+
+previously_accepted_classes=dataanalysis.callback.default_callback_filter.callback_accepted_classes
+
 class CallbackRareDDOSAFilter(dataanalysis.callback.Callback):
     def extract_data(self,obj):
+        data={'scwid':'inapplicable',}
+
         scw=obj.cache.get_scw(obj._da_locally_complete)
+        
+        expected_hashe=getattr(obj,'_da_expected_full_hashe',None)
+
+        if expected_hashe is not None:
+            data['node_id']=obj.cache.hashe2signature(expected_hashe)
+        else:
+            data['node_id']="undefined_expected_hashe_please_complain" # add sentry
+
         if scw is None:
-            scw=obj.cache.get_scw(obj._da_expected_full_hashe)
-        return {"scwid":scw}
+            scw=obj.cache.get_scw(expected_hashe)
+
+        if scw is not None:
+            data.update({"scwid":scw})
+
+        return data
 
 dataanalysis.callback.default_callback_filter=CallbackRareDDOSAFilter
+
+if previously_accepted_classes is not None:
+    dataanalysis.callback.default_callback_filter.set_callback_accepted_classes(previously_accepted_classes)
+
 CallbackRareDDOSAFilter.set_callback_accepted_classes([mosaic_jemx_osa,mosaic_jemx,jemx_image,jemx_spe,jemx_lcr,spe_pick,lc_pick])
