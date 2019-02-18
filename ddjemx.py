@@ -779,7 +779,8 @@ class spe_pick(ddosa.DataAnalysis):
     input_jemx=JEMX
     input_rmf=JRMF
 
-    source_names=["Crab"]
+    source_names=[]
+    #source_names=["Crab"]
 
     cached=True
 
@@ -796,9 +797,23 @@ class spe_pick(ddosa.DataAnalysis):
         dl['dol']="ogg.fits"
         dl.run()
 
-        assert len(self.source_names)==1
 
-        for source_name in self.source_names:
+        import glob
+        print(glob.glob("*"))
+
+        if len(self.source_names) != 0:
+            source_names = self.source_names
+        else:
+            ddosa.remove_withtemplate("sources.fits(JMX%i-OBS.-RES.tpl)"%self.input_jemx.num)
+            ht = ddosa.heatool("src_collect")
+            ht['group'] = "ogg.fits[1]"
+            ht['instName']=self.input_jemx.get_name()
+            ht['results']='sources.fits'
+            ht.run()
+
+            source_names  =list(fits.open('sources.fits')[1].data['NAME'])
+
+        for source_name in source_names:
             sumname = "spec_%s" % source_name.replace(" ","_")
             singlename = source_name+"_JMX%i_single_pha2.fits"%self.input_jemx.num
             singlearfname = source_name+"_JMX%i_single_arf2.fits"%self.input_jemx.num
