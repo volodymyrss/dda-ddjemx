@@ -207,7 +207,7 @@ class jemx_lcr(ddosa.DataAnalysis):
 
     cached=True
 
-    version="v1.1"
+    version="v1.2"
 
     def main(self):
         open("scw.list","w").write(self.input_scw.swgpath+"[1]")
@@ -264,9 +264,15 @@ class jemx_lcr(ddosa.DataAnalysis):
         lc = scwpath+"/"+name+"_src_lc.fits"
 
         if os.path.exists(lc):
+            shutil.copy(lc, "./"+name+"_src_lc_iros.fits")
+            self.lcr=da.DataFile(name+"_src_lc_iros.fits")
+
+        lc = scwpath+"/"+name+"_src_iros_lc.fits"
+
+        if os.path.exists(lc):
             shutil.copy(lc, "./"+name+"_src_lc.fits")
-        
             self.lcr=da.DataFile(name+"_src_lc.fits")
+
         #else:
         #    raise ExceptionNoLCProduced()
 
