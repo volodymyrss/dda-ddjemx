@@ -799,9 +799,10 @@ class JMXImageSpectraGroups(JMXGroups):
 class JMXImageLCGroups(JMXGroups):
     input_scwlist=None
     input_lcr_processing = jemx_lcr_by_scw
+    input_spe_processing = jemx_spe_by_scw
     input_image_processing = jemx_image_by_scw
 
-    attachements=['jemx_image','jemx_lcr']
+    attachements=['jemx_image','jemx_lcr','jemx_spe']
 
 class JMXImageGroups(JMXGroups):
     input_scwlist = None
@@ -885,8 +886,8 @@ class lc_pick(ddosa.DataAnalysis):
     input_lcgroups = JMXImageLCGroups
     input_jemx=JEMX
 
-    source_names=["Crab"]
-    source_ids=["J053432.0+220052"]
+    source_names=[]
+    source_ids=[]
 
     cached=True
 
@@ -905,9 +906,21 @@ class lc_pick(ddosa.DataAnalysis):
         dl['dol']="ogg.fits"
         dl.run()
 
-        assert len(self.source_names)==1
+        if len(self.source_names) != 0:
+            source_names = self.source_names
+            source_ids = self.source_ids
+        else:
+            ddosa.remove_withtemplate("sources.fits(JMX%i-OBS.-RES.tpl)"%self.input_jemx.num)
+            ht = ddosa.heatool("src_collect")
+            ht['group'] = "ogg.fits[1]"
+            ht['instName']=self.input_jemx.get_name()
+            ht['results']='sources.fits'
+            ht.run()
 
-        for source_name, source_id in zip(self.source_names,self.source_ids):
+            source_names  =list(fits.open('sources.fits')[1].data['NAME'])
+            source_ids  =list(fits.open('sources.fits')[1].data['SOURCE_ID'])
+
+        for source_name, source_id in zip(source_names,source_ids):
             sumname = "lc_%s" % source_name.replace(" ","_")
 
             ddosa.remove_withtemplate(sumname+".fits")
