@@ -534,7 +534,8 @@ class mosaic_jemx(ddosa.DataAnalysis):
         self.mosaic_lists()
         del self.lists
 
-    def choose_list(self, (ra, dec)):
+    def choose_list(self, coords):
+        (ra, dec) = coords
         for (list_ra, list_dec), thelist in self.lists:
             if angsep(list_ra, list_dec, ra, dec) < self.maxsep:
                 return thelist
