@@ -848,9 +848,11 @@ class spe_pick(ddosa.DataAnalysis):
             ht['results']='sources.fits'
             ht.run()
 
-            source_names  =list(fits.open('sources.fits')[1].data['NAME'])
+            source_names  = list(set(fits.open('sources.fits')[1].data['NAME']))
 
         for source_name in source_names:
+            print("will pick source:", source_name)
+
             sumname = "spec_%s" % source_name.replace(" ","_")
             singlename = source_name+"_JMX%i_single_pha2.fits"%self.input_jemx.num
             singlearfname = source_name+"_JMX%i_single_arf2.fits"%self.input_jemx.num
@@ -866,6 +868,7 @@ class spe_pick(ddosa.DataAnalysis):
             ht['source']=source_name
             ht['instrument']=self.input_jemx.get_name()
             ht['sumname']=sumname
+            ht['single']='n'
             ht.run()
 
             import glob
