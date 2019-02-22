@@ -57,7 +57,7 @@ class UserCat(ddosa.DataAnalysis):
 
     cached=True
 
-    version="v1_v404"
+    version="v2"
 
     def main(self):
         fn="jemx_user_catalog.fits"
@@ -69,8 +69,10 @@ class UserCat(ddosa.DataAnalysis):
             print("failed with simple path:",e, self.input_cat.cat)
             f=fits.open(self.input_cat.cat.get_path())
 
-        f[1].data['FLAG'][f[1].data['NAME']=='Ginga 2023+338']=1
-        f[1].data=f[1].data[f[1].data['FLAG']==1]
+        #f[1].data['FLAG'][f[1].data['NAME']=='Ginga 2023+338']=1
+        #f[1].data=f[1].data[f[1].data['FLAG']==1]
+
+        f[1].data['FLAG']=1
         f.writeto(fn,clobber=True)
 
         self.cat=da.DataFile(fn)
