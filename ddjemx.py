@@ -63,7 +63,12 @@ class UserCat(ddosa.DataAnalysis):
         fn="jemx_user_catalog.fits"
         ddosa.remove_withtemplate(fn)
 
-        f=fits.open(self.input_cat.cat[:-3])
+        try:
+            f=fits.open(re.sub("\[.\]","",self.input_cat.cat))
+        except Exception as e:
+            print("failed with simple path:",e, self.input_cat.cat)
+            f=fits.open(self.input_cat.cat.get_path())
+
         f[1].data['FLAG'][f[1].data['NAME']=='Ginga 2023+338']=1
         f[1].data=f[1].data[f[1].data['FLAG']==1]
         f.writeto(fn,clobber=True)
