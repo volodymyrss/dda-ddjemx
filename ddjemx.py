@@ -320,7 +320,7 @@ class jemx_spe(ddosa.DataAnalysis):
     input_scw=ddosa.ScWData
     input_ic=ddosa.ICRoot
     input_jemx=JEMX
-    input_usercat=UserCat
+  #  input_usercat=UserCat
     input_refcat=ddosa.GRcat
     input_jbins=JEnergyBinsSpectra
 
