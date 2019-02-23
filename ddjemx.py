@@ -64,15 +64,15 @@ class UserCat(ddosa.DataAnalysis):
         ddosa.remove_withtemplate(fn)
 
         try:
-            f=fits.open(re.sub("\[.\]","",self.input_cat.cat))
+            f = fits.open(re.sub("\[.\]", "", self.input_cat.cat))
         except Exception as e:
-            print("failed with simple path:",e, self.input_cat.cat)
-            f=fits.open(self.input_cat.cat.get_path())
+            print("failed with simple path:", e, self.input_cat.cat)
+            f = fits.open(self.input_cat.cat.get_full_path())
 
         #f[1].data['FLAG'][f[1].data['NAME']=='Ginga 2023+338']=1
         #f[1].data=f[1].data[f[1].data['FLAG']==1]
 
-        f[1].data['FLAG']=1
+        f[1].data['FLAG'] = 1
         f.writeto(fn,clobber=True)
 
         self.cat=da.DataFile(fn)
@@ -386,6 +386,8 @@ class jemx_spe(ddosa.DataAnalysis):
         except pilton.HEAToolException as ex:
             if 'J_SCW_NO_MINIMUM_DATA' in ht.output:
                 raise ExceptionJ_SCW_NO_MINIMUM_DATA(dict(scw=self.input_scw.scwid,jemx=self.input_jemx.get_name()))
+            else:
+                raise
 
         name=self.input_jemx.get_name()
         scwpath=ht.cwd+"/scw/"+self.input_scw.scwid
