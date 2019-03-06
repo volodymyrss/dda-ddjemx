@@ -57,15 +57,22 @@ class UserCat(ddosa.DataAnalysis):
 
     cached=True
 
-    version="v1_v404"
+    version="v2"
 
     def main(self):
         fn="jemx_user_catalog.fits"
         ddosa.remove_withtemplate(fn)
 
-        f=fits.open(self.input_cat.cat[:-3])
-        f[1].data['FLAG'][f[1].data['NAME']=='Ginga 2023+338']=1
-        f[1].data=f[1].data[f[1].data['FLAG']==1]
+        try:
+            f = fits.open(re.sub("\[.\]", "", self.input_cat.cat))
+        except Exception as e:
+            print("failed with simple path:", e, self.input_cat.cat)
+            f = fits.open(self.input_cat.cat.get_full_path())
+
+        #f[1].data['FLAG'][f[1].data['NAME']=='Ginga 2023+338']=1
+        #f[1].data=f[1].data[f[1].data['FLAG']==1]
+
+        f[1].data['FLAG'] = 1
         f.writeto(fn,clobber=True)
 
         self.cat=da.DataFile(fn)
@@ -207,7 +214,7 @@ class jemx_lcr(ddosa.DataAnalysis):
 
     cached=True
 
-    version="v1.1"
+    version="v1.2"
 
     def main(self):
         open("scw.list","w").write(self.input_scw.swgpath+"[1]")
@@ -264,9 +271,15 @@ class jemx_lcr(ddosa.DataAnalysis):
         lc = scwpath+"/"+name+"_src_lc.fits"
 
         if os.path.exists(lc):
+            shutil.copy(lc, "./"+name+"_src_lc_iros.fits")
+            self.lcr=da.DataFile(name+"_src_lc_iros.fits")
+
+        lc = scwpath+"/"+name+"_src_iros_lc.fits"
+
+        if os.path.exists(lc):
             shutil.copy(lc, "./"+name+"_src_lc.fits")
-        
             self.lcr=da.DataFile(name+"_src_lc.fits")
+
         #else:
         #    raise ExceptionNoLCProduced()
 
@@ -309,7 +322,7 @@ class jemx_spe(ddosa.DataAnalysis):
     input_scw=ddosa.ScWData
     input_ic=ddosa.ICRoot
     input_jemx=JEMX
-    input_usercat=UserCat
+  #  input_usercat=UserCat
     input_refcat=ddosa.GRcat
     input_jbins=JEnergyBinsSpectra
 
@@ -373,6 +386,8 @@ class jemx_spe(ddosa.DataAnalysis):
         except pilton.HEAToolException as ex:
             if 'J_SCW_NO_MINIMUM_DATA' in ht.output:
                 raise ExceptionJ_SCW_NO_MINIMUM_DATA(dict(scw=self.input_scw.scwid,jemx=self.input_jemx.get_name()))
+            else:
+                raise
 
         name=self.input_jemx.get_name()
         scwpath=ht.cwd+"/scw/"+self.input_scw.scwid
@@ -528,7 +543,8 @@ class mosaic_jemx(ddosa.DataAnalysis):
         self.mosaic_lists()
         del self.lists
 
-    def choose_list(self, (ra, dec)):
+    def choose_list(self, coords):
+        (ra, dec) = coords
         for (list_ra, list_dec), thelist in self.lists:
             if angsep(list_ra, list_dec, ra, dec) < self.maxsep:
                 return thelist
@@ -793,9 +809,10 @@ class JMXImageSpectraGroups(JMXGroups):
 class JMXImageLCGroups(JMXGroups):
     input_scwlist=None
     input_lcr_processing = jemx_lcr_by_scw
+    input_spe_processing = jemx_spe_by_scw
     input_image_processing = jemx_image_by_scw
 
-    attachements=['jemx_image','jemx_lcr']
+    attachements=['jemx_image','jemx_lcr','jemx_spe']
 
 class JMXImageGroups(JMXGroups):
     input_scwlist = None
@@ -809,7 +826,8 @@ class spe_pick(ddosa.DataAnalysis):
     input_jemx=JEMX
     input_rmf=JRMF
 
-    source_names=["Crab"]
+    source_names=[]
+    #source_names=["Crab"]
 
     cached=True
 
@@ -826,9 +844,25 @@ class spe_pick(ddosa.DataAnalysis):
         dl['dol']="ogg.fits"
         dl.run()
 
-        assert len(self.source_names)==1
 
-        for source_name in self.source_names:
+        import glob
+        print(glob.glob("*"))
+
+        if len(self.source_names) != 0:
+            source_names = self.source_names
+        else:
+            ddosa.remove_withtemplate("sources.fits(JMX%i-OBS.-RES.tpl)"%self.input_jemx.num)
+            ht = ddosa.heatool("src_collect")
+            ht['group'] = "ogg.fits[1]"
+            ht['instName']=self.input_jemx.get_name()
+            ht['results']='sources.fits'
+            ht.run()
+
+            source_names  = list(set(fits.open('sources.fits')[1].data['NAME']))
+
+        for source_name in source_names:
+            print("will pick source:", source_name)
+
             sumname = "spec_%s" % source_name.replace(" ","_")
             singlename = source_name+"_JMX%i_single_pha2.fits"%self.input_jemx.num
             singlearfname = source_name+"_JMX%i_single_arf2.fits"%self.input_jemx.num
@@ -844,6 +878,7 @@ class spe_pick(ddosa.DataAnalysis):
             ht['source']=source_name
             ht['instrument']=self.input_jemx.get_name()
             ht['sumname']=sumname
+            ht['single']='n'
             ht.run()
 
             import glob
@@ -864,8 +899,8 @@ class lc_pick(ddosa.DataAnalysis):
     input_lcgroups = JMXImageLCGroups
     input_jemx=JEMX
 
-    source_names=["Crab"]
-    source_ids=["J053432.0+220052"]
+    source_names=[]
+    source_ids=[]
 
     cached=True
 
@@ -884,9 +919,21 @@ class lc_pick(ddosa.DataAnalysis):
         dl['dol']="ogg.fits"
         dl.run()
 
-        assert len(self.source_names)==1
+        if len(self.source_names) != 0:
+            source_names = self.source_names
+            source_ids = self.source_ids
+        else:
+            ddosa.remove_withtemplate("sources.fits(JMX%i-OBS.-RES.tpl)"%self.input_jemx.num)
+            ht = ddosa.heatool("src_collect")
+            ht['group'] = "ogg.fits[1]"
+            ht['instName']=self.input_jemx.get_name()
+            ht['results']='sources.fits'
+            ht.run()
 
-        for source_name, source_id in zip(self.source_names,self.source_ids):
+            source_names  =list(fits.open('sources.fits')[1].data['NAME'])
+            source_ids  =list(fits.open('sources.fits')[1].data['SOURCE_ID'])
+
+        for source_name, source_id in zip(source_names,source_ids):
             sumname = "lc_%s" % source_name.replace(" ","_")
 
             ddosa.remove_withtemplate(sumname+".fits")
@@ -960,15 +1007,37 @@ class mosaic_jemx_osa(ddosa.DataAnalysis):
 import dataanalysis
 import dataanalysis.callback
 
+#dataanalysis.callback.default_callback_filter=CallbackRareDDOSAFilter
+
+previously_accepted_classes=dataanalysis.callback.default_callback_filter.callback_accepted_classes
+
 class CallbackRareDDOSAFilter(dataanalysis.callback.Callback):
     def extract_data(self,obj):
+        data={'scwid':'inapplicable',}
+
         scw=obj.cache.get_scw(obj._da_locally_complete)
+        
+        expected_hashe=getattr(obj,'_da_expected_full_hashe',None)
+
+        if expected_hashe is not None:
+            data['node_id']=obj.cache.hashe2signature(expected_hashe)
+        else:
+            data['node_id']="undefined_expected_hashe_please_complain" # add sentry
+
         if scw is None:
             try:
                 scw=obj.cache.get_scw(obj._da_expected_full_hashe)
             except:
                 pass
-        return {"scwid":scw}
+
+        if scw is not None:
+            data.update({"scwid":scw})
+
+        return data
 
 dataanalysis.callback.default_callback_filter=CallbackRareDDOSAFilter
+
+if previously_accepted_classes is not None:
+    dataanalysis.callback.default_callback_filter.set_callback_accepted_classes(previously_accepted_classes)
+
 CallbackRareDDOSAFilter.set_callback_accepted_classes([mosaic_jemx_osa,mosaic_jemx,jemx_image,jemx_spe,jemx_lcr,spe_pick,lc_pick])
