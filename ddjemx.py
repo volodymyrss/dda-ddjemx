@@ -964,7 +964,10 @@ class CallbackRareDDOSAFilter(dataanalysis.callback.Callback):
     def extract_data(self,obj):
         scw=obj.cache.get_scw(obj._da_locally_complete)
         if scw is None:
-            scw=obj.cache.get_scw(obj._da_expected_full_hashe)
+            try:
+                scw=obj.cache.get_scw(obj._da_expected_full_hashe)
+            except:
+                pass
         return {"scwid":scw}
 
 dataanalysis.callback.default_callback_filter=CallbackRareDDOSAFilter
