@@ -964,7 +964,7 @@ class mosaic_jemx_osa(ddosa.DataAnalysis):
     cached=True
 
     def get_version(self):
-        return super(DataAnalysis,self).get_version()
+        return super(ddosa.DataAnalysis,self).get_version()
 
     def main(self):
         self.input_groups.construct_og("ogg.fits")
