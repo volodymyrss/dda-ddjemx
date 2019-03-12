@@ -163,6 +163,9 @@ class jemx_image(ddosa.DataAnalysis):
         ht['CAT_I_refCat'] = self.input_refcat.cat
         ht['startLevel']="COR"
         ht['endLevel']="IMA"
+        
+        if hasattr(self,'input_usercat'):
+            ht['CAT_I_usrCat']=self.input_usercat.cat.get_path()
 
         if self.input_jbins.bins is None:
             ht['nChanBins']=self.input_jbins.nchanpow
