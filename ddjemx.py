@@ -246,7 +246,7 @@ class jemx_lcr(ddosa.DataAnalysis):
 
         ht['CAT_I_refCat'] = self.input_refcat.cat
 
-        ht['skipLevels']=""
+        ht['skipLevels']="SPE"
 
         if self.input_jbins.bins is None:
             ht['nChanBins'] = self.input_jbins.nchanpow
@@ -271,16 +271,16 @@ class jemx_lcr(ddosa.DataAnalysis):
         lc = scwpath+"/"+name+"_src_lc.fits"
 
         if os.path.exists(lc):
-            shutil.copy(lc, "./"+name+"_src_lc_iros.fits")
-            self.lcr=da.DataFile(name+"_src_lc_iros.fits")
+            shutil.copy(lc, "./"+name+"_src_lc.fits")
+            self.lcr=da.DataFile(name+"_src_lc.fits")
 
         lc = scwpath+"/"+name+"_src_iros_lc.fits"
 
         if os.path.exists(lc):
-            shutil.copy(lc, "./"+name+"_src_lc.fits")
-            self.lcr=da.DataFile(name+"_src_lc.fits")
+            shutil.copy(lc, "./"+name+"_src_lc_iros.fits")
+            self.lcr=da.DataFile(name+"_src_lc_iros.fits")
 
-        #else:
+         #else:
         #    raise ExceptionNoLCProduced()
 
 
@@ -964,6 +964,9 @@ class lc_pick(ddosa.DataAnalysis):
             ht['source']=source_id
             ht['instrument']=self.input_jemx.get_name()
             ht['lc']=sumname
+            ht['emin']=""
+            ht['emax']=""
+
             ht.run()
 
             import glob
