@@ -47,7 +47,7 @@ class JEMX(da.DataAnalysis):
         return "jemx%i" % self.num
 
     def get_swg(self):
-        return "swg_jemx%i.fits"%self.num
+        return "swg_jmx%i.fits"%self.num
     
     def get_og(self):
         return "og_jmx%i.fits"%self.num
@@ -163,9 +163,6 @@ class jemx_image(ddosa.DataAnalysis):
         ht['CAT_I_refCat'] = self.input_refcat.cat
         ht['startLevel']="COR"
         ht['endLevel']="IMA"
-        
-        if hasattr(self,'input_usercat'):
-            ht['CAT_I_usrCat']=self.input_usercat.cat.get_path()
 
         if self.input_jbins.bins is None:
             ht['nChanBins']=self.input_jbins.nchanpow
@@ -329,6 +326,8 @@ class jemx_spe(ddosa.DataAnalysis):
     input_refcat=ddosa.GRcat
     input_jbins=JEnergyBinsSpectra
 
+    input_image=jemx_image
+
     COR_gainModel=2
 
     def get_version(self):
@@ -339,7 +338,7 @@ class jemx_spe(ddosa.DataAnalysis):
 
     cached=True
 
-    version="v1.1"
+    version="v1.2"
 
     def main(self):
         open("scw.list","w").write(self.input_scw.swgpath+"[1]")
@@ -356,7 +355,17 @@ class jemx_spe(ddosa.DataAnalysis):
         ogc['baseDir']=wd # dangerous
         ogc.run()
 
+
         scwroot="scw/"+self.input_scw.scwid
+        
+        ht=ddosa.heatool("dal_attach")
+        ht['Parent']=wd+"/obs/"+ogc['ogid'].value+"/"+scwroot+"/"+self.input_jemx.get_swg()
+        ht['Child1']=self.input_image.skyima.get_path()
+        ht['Child2']=self.input_image.srclres.get_path()
+        ht.run()
+
+        raise
+
 
         bin="jemx_science_analysis"
         os.environ['COMMONSCRIPT']="1"
@@ -370,7 +379,8 @@ class jemx_spe(ddosa.DataAnalysis):
 
         if hasattr(self,'input_usercat'):
             ht['CAT_I_usrCat']=self.input_usercat.cat.get_full_path()
-        ht['skipLevels']=""
+        ht['skipLevels']="BIN_I,IMA,BIN_T,LCR"
+        #ht['skipLevels']="CAT_I,BIN_I,IMA,BIN_T,LCR"
         ht['skipSPEfirstScw']="n"
 
         if self.input_jbins.bins is None:
@@ -397,13 +407,16 @@ class jemx_spe(ddosa.DataAnalysis):
 
         srcl_spe = scwpath+"/"+name+"_srcl_spe.fits"
         srcl_arf = scwpath+"/"+name+"_srcl_arf.fits"
-
+        srcl_res = scwpath+"/"+name+"_srcl_res.fits"
+        
         if os.path.exists(srcl_spe) and os.path.exists(srcl_arf):
             shutil.copy(srcl_spe, name+"_srcl_spe.fits")
             shutil.copy(srcl_arf, name+"_srcl_arf.fits")
+            shutil.copy(srcl_res, name+"_srcl_res.fits")
         
             self.spe=da.DataFile(name+"_srcl_spe.fits")
             self.arf=da.DataFile(name+"_srcl_arf.fits")
+            self.res=da.DataFile(name+"_srcl_res.fits")
 #        else:
             #raise ExceptionNoSpectraProduced()
 
@@ -737,8 +750,8 @@ class jemx_lcr_by_scw(graphtools.Factorize):
 
 class JMXGroups(ddosa.DataAnalysis):
     input_scwlist=None
-    input_spe_processing=jemx_spe_by_scw
-    input_image_processing=jemx_image_by_scw
+#    input_spe_processing=jemx_spe_by_scw
+#    input_image_processing=jemx_image_by_scw
     input_jemx=JEMX
 
     allow_alias=True
@@ -760,7 +773,7 @@ class JMXGroups(ddosa.DataAnalysis):
             ]
 
             for m in members[1:]:
-                for option in ['spe','arf','srclres','skyima','lcr']:
+                for option in ['spe','arf','res','srclres','skyima','lcr']:
                     if hasattr(m,option):
                         children.append(getattr(m,option).get_path())
 
@@ -809,6 +822,12 @@ class JMXImageSpectraGroups(JMXGroups):
 
     attachements=['jemx_image','jemx_spe']
 
+class JMXSpectraGroups(JMXGroups):
+    input_scwlist=None
+    input_spe_processing = jemx_spe_by_scw
+
+    attachements=['jemx_spe']
+
 class JMXImageLCGroups(JMXGroups):
     input_scwlist=None
     input_lcr_processing = jemx_lcr_by_scw
@@ -825,7 +844,7 @@ class JMXImageGroups(JMXGroups):
 
 
 class spe_pick(ddosa.DataAnalysis):
-    input_spegroups = JMXImageSpectraGroups
+    input_spegroups = JMXSpectraGroups
     input_jemx=JEMX
     input_rmf=JRMF
 
