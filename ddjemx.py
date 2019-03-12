@@ -326,7 +326,7 @@ class jemx_spe(ddosa.DataAnalysis):
     input_refcat=ddosa.GRcat
     input_jbins=JEnergyBinsSpectra
 
-    input_image=jemx_image
+  #  input_image=jemx_image  attempt to separate imaging
 
     COR_gainModel=2
 
@@ -338,7 +338,7 @@ class jemx_spe(ddosa.DataAnalysis):
 
     cached=True
 
-    version="v1.2"
+    version="v1.2.1"
 
     def main(self):
         open("scw.list","w").write(self.input_scw.swgpath+"[1]")
@@ -358,13 +358,12 @@ class jemx_spe(ddosa.DataAnalysis):
 
         scwroot="scw/"+self.input_scw.scwid
         
-        ht=ddosa.heatool("dal_attach")
-        ht['Parent']=wd+"/obs/"+ogc['ogid'].value+"/"+scwroot+"/"+self.input_jemx.get_swg()
-        ht['Child1']=self.input_image.skyima.get_path()
-        ht['Child2']=self.input_image.srclres.get_path()
-        ht.run()
+        #ht=ddosa.heatool("dal_attach")
+        #ht['Parent']=wd+"/obs/"+ogc['ogid'].value+"/"+scwroot+"/"+self.input_jemx.get_swg()
+        #ht['Child1']=self.input_image.skyima.get_path()
+        #ht['Child2']=self.input_image.srclres.get_path()
+        #ht.run()
 
-        raise
 
 
         bin="jemx_science_analysis"
@@ -379,7 +378,8 @@ class jemx_spe(ddosa.DataAnalysis):
 
         if hasattr(self,'input_usercat'):
             ht['CAT_I_usrCat']=self.input_usercat.cat.get_full_path()
-        ht['skipLevels']="BIN_I,IMA,BIN_T,LCR"
+        ht['skipLevels']=""
+        #ht['skipLevels']="BIN_I,IMA,BIN_T,LCR" # attempt to separate imaging
         #ht['skipLevels']="CAT_I,BIN_I,IMA,BIN_T,LCR"
         ht['skipSPEfirstScw']="n"
 
@@ -828,13 +828,11 @@ class JMXSpectraGroups(JMXGroups):
 
     attachements=['jemx_spe']
 
-class JMXImageLCGroups(JMXGroups):
+class JMXLCGroups(JMXGroups):
     input_scwlist=None
     input_lcr_processing = jemx_lcr_by_scw
-    input_spe_processing = jemx_spe_by_scw
-    input_image_processing = jemx_image_by_scw
 
-    attachements=['jemx_image','jemx_lcr','jemx_spe']
+    attachements=['jemx_lcr']
 
 class JMXImageGroups(JMXGroups):
     input_scwlist = None
@@ -918,7 +916,7 @@ class spe_pick(ddosa.DataAnalysis):
                 setattr(self, 'rmf_' + source_name, da.DataFile(sumname + "_rmf.fits"))
 
 class lc_pick(ddosa.DataAnalysis):
-    input_lcgroups = JMXImageLCGroups
+    input_lcgroups = JMXLCGroups
     input_jemx=JEMX
 
     source_names=[]
