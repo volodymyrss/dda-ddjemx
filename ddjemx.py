@@ -1054,8 +1054,8 @@ class mosaic_jemx_osa(ddosa.DataAnalysis):
 
         #attribute of the mosaic sources for the output catalog
         if os.path.exists(fn):
-            self.obsres = fn
-            self.srclres = fn
+            self.obsres = da.DataFile(fn)
+            self.srclres = da.DataFile(fn)
 
         #attribute of the mosaic image
         if os.path.exists(fn_mosaic):
