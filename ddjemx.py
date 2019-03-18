@@ -1035,6 +1035,8 @@ class mosaic_jemx_osa(ddosa.DataAnalysis):
         ht['inDOL'] = fn_mosaic+"[2]"
         ht['varDOL'] = fn_mosaic + "[3]"
         ht['sigDOL'] = fn_mosaic + "[4]"
+        ht['detsigMin'] = "-3.0"
+        #This parameter adds to the suggested detection significance an additional margin of 3 to reduce spurious sources
         ht['outFile']=fn
         ht.run()
 
