@@ -992,6 +992,8 @@ class mosaic_jemx_osa(ddosa.DataAnalysis):
 
     cached=True
 
+    version="v1"
+
     def get_version(self):
         return super(mosaic_jemx_osa, self).get_version()
 
