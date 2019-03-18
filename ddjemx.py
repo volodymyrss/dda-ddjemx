@@ -135,7 +135,7 @@ class jemx_image(ddosa.DataAnalysis):
 
     cached=True
 
-    version="v2.2"
+    version="v2.2.1"
 
     def main(self):
         open("scw.list","w").write(self.input_scw.swgpath+"[1]")
@@ -378,7 +378,7 @@ class jemx_spe(ddosa.DataAnalysis):
 
         if hasattr(self,'input_usercat'):
             ht['CAT_I_usrCat']=self.input_usercat.cat.get_full_path()
-        ht['skipLevels']=""
+        ht['skipLevels']="LCR"
         #ht['skipLevels']="BIN_I,IMA,BIN_T,LCR" # attempt to separate imaging
         #ht['skipLevels']="CAT_I,BIN_I,IMA,BIN_T,LCR"
         ht['skipSPEfirstScw']="n"
@@ -528,6 +528,10 @@ def angsep(ra1,dec1,ra2,dec2):
     return SEP
 
 class mosaic_jemx(ddosa.DataAnalysis):
+
+    #This function uses varmosaic to create a mosaic image, see
+    # mosaic_jemx_osa for the class that uses OSA to extract the image
+
     input_imagelist = JMXScWImageList
 
     # write_caches=[da.TransientCache,ddosa.MemCacheIntegralFallback,ddosa.MemCacheIntegralIRODS]
@@ -725,6 +729,8 @@ class mosaic_jemx(ddosa.DataAnalysis):
 
 
 class mosaic_src_loc(ddosa.DataAnalysis):
+
+    #This gets the image from mosaic_jemx, which is using varmosaic, not the mosaic_jemx_osa class
     input_mosaic=mosaic_jemx
 
     copy_cached_input=False
@@ -1000,10 +1006,13 @@ class mosaic_jemx_osa(ddosa.DataAnalysis):
 
         env=deepcopy(os.environ)
         env['DISPLAY']=""
-        
-        ddosa.remove_withtemplate(self.input_jemx.get_name()+"_obs_res.fits")
-        ddosa.remove_withtemplate("jemx_osa_mosaic.fits")
 
+        fn_mosaic=self.input_jemx.get_name()+"_osa_mosaic.fits"
+
+        ddosa.remove_withtemplate(self.input_jemx.get_name()+"_obs_res.fits")
+        ddosa.remove_withtemplate(fn_mosaic)
+
+        #It runs the mosaic production
         ht = ddosa.heatool("jemx_science_analysis",env=env)
         ht['ogDOL'] = "ogg.fits"
         ht['IC_Group']=self.input_ic.icindex
@@ -1013,17 +1022,44 @@ class mosaic_jemx_osa(ddosa.DataAnalysis):
         ht['endLevel'] = "IMA2"
         ht['skipLevels']=""
         ht['chatter']=5
-        ht['IMA2_outfile']="jemx_osa_mosaic"
+        ht['IMA2_outfile']=fn_mosaic
         ht.run()
 
+        #It finds sources in the mosaic
+        fn = self.input_jemx.get_name()+"_sloc_res.fits"
+        ddosa.remove_withtemplate(fn)
+
+        ht=ddosa.heatool("j_ima_src_locator")
+        ht['inDOL'] = fn_mosaic+"[2]"
+        ht['varDOL'] = fn_mosaic + "[3]"
+        ht['sigDOL'] = fn_mosaic + "[4]"
+        ht['outFile']=fn
+        ht.run()
+
+        #It identifies sources in the catalog
+        ht = ddosa.heatool("q_identify_srcs")
+
+        #Naming of instrument is different in this tool, assume it is jemx1 and change if it is jemx2
+        instrument=4
+        if self.input_jemx.get_name() == "jmx2":
+            instrument=5
+
+        ht['instrument']=instrument
+        ht['srcl_cat_dol']= self.input_refcat.cat
+        ht['srcl_res_dol']=fn
+        ht.run()
+
+        #It displays files for logging
         os.system("ls -ltor")
 
-        if os.path.exists(self.input_jemx.get_name()+"_obs_res.fits"):
-            self.obsres = da.DataFile(self.input_jemx.get_name()+"_obs_res.fits")
-            self.srclres = da.DataFile(self.input_jemx.get_name()+"_obs_res.fits")
+        #attribute of the mosaic sources for the output catalog
+        if os.path.exists(fn):
+            self.obsres = fn
+            self.srclres = fn
 
-        if os.path.exists("jemx_osa_mosaic.fits"):
-            self.skyima = da.DataFile("jemx_osa_mosaic.fits")
+        #attribute of the mosaic image
+        if os.path.exists(fn_mosaic):
+            self.skyima = da.DataFile(fn_mosaic)
 
 #        setattr(self, 'arf_' + source_name, da.DataFile(sumname + "_arf.fits"))
 
