@@ -241,10 +241,10 @@ class jemx_lcr(ddosa.DataAnalysis):
         ht['IC_Alias']="OSA"
         ht['startLevel']="COR"
         ht['endLevel']="LCR"
-        if hasattr(self,'input_usercat'):
-            ht['CAT_I_usrCat']=self.input_usercat.cat.get_path()
-
         ht['CAT_I_refCat'] = self.input_refcat.cat
+
+        if hasattr(self,'input_usercat'):
+            ht['CAT_I_usrCat']=self.input_usercat.cat.get_full_path()
 
         ht['skipLevels']="SPE"
 
