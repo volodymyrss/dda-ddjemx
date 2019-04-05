@@ -976,7 +976,7 @@ class lc_pick(ddosa.DataAnalysis):
         print("found the following sources",source_names, source_ids)
 
         for source_name, source_id in zip(source_names,source_ids):
-            sumname = "lc_%s" % source_name.replace(" ","_")
+            sumname = "lc_%s" % source_name.replace(" ","_").replace("+","_").replace("-","_")
 
             ddosa.remove_withtemplate(sumname+".fits")
             
