@@ -959,6 +959,8 @@ class lc_pick(ddosa.DataAnalysis):
             source_names  =list(fits.open('sources.fits')[1].data['NAME'])
             source_ids  =list(fits.open('sources.fits')[1].data['SOURCE_ID'])
 
+        print("found the following sources",source_names, source_ids)
+
         for source_name, source_id in zip(source_names,source_ids):
             sumname = "lc_%s" % source_name.replace(" ","_")
 
