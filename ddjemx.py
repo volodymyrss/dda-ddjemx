@@ -14,7 +14,7 @@ from astropy.io import fits as fits
 from numpy import *
 import re
 
-class OSAEnv(DataAnalysis):
+class OSAEnv(ddosa.DataAnalysis):
     version="10.2"
 
 
