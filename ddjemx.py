@@ -930,7 +930,7 @@ class lc_pick(ddosa.DataAnalysis):
 
     cached=True
 
-    version="v1"
+    version="v1.1"
 
     def get_version(self):
         try:
