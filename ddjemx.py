@@ -214,7 +214,7 @@ class jemx_lcr(ddosa.DataAnalysis):
 
     cached=True
 
-    version="v1.2"
+    version="v1.3"
 
     def main(self):
         open("scw.list","w").write(self.input_scw.swgpath+"[1]")
