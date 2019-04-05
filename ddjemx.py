@@ -85,7 +85,8 @@ class UserCat(ddosa.DataAnalysis):
 class LCTimeBin(ddosa.DataAnalysis):
     timebin_s=100
 
-    _da_settings=['timebin_s']
+    def get_version(self):
+        return self.get_signature()+"."+self.version+"."+'timebin_s:'+repr(self.timebin_s)
 
 class JEnergyBins(ddosa.DataAnalysis):
     nchanpow=-4
