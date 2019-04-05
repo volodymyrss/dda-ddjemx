@@ -260,7 +260,7 @@ class jemx_lcr(ddosa.DataAnalysis):
             ht['chanLow'] = " ".join(["%i" % bin['chmin'] for bin in self.input_jbins.bin_interpretation])
             ht['chanHigh'] = " ".join(["%i" % bin['chmax'] for bin in self.input_jbins.bin_interpretation])
 
-        ht['LCR_timeStep']=self.input_timebin.timebin_s
+        ht['LCR_timeStep']=self.input_timebin.time_bin_seconds
         ht['COR_gainModel']=self.COR_gainModel
         ht['jemxNum']=self.input_jemx.num
 
