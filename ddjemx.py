@@ -936,7 +936,7 @@ class lc_pick(ddosa.DataAnalysis):
 
     cached=True
 
-    version="v1.1"
+    version="v1.2"
 
     def get_version(self):
         try:
@@ -990,6 +990,9 @@ class lc_pick(ddosa.DataAnalysis):
 
             if os.path.exists(sumname+".fits"):
                 setattr(self,sumname,da.DataFile(sumname+".fits"))
+
+        self.comment = "this is a comment"
+        self.warning = "this is a warning"
 
 
 class mosaic_jemx_osa(ddosa.DataAnalysis):
