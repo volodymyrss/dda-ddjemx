@@ -14,6 +14,11 @@ from astropy.io import fits as fits
 from numpy import *
 import re
 
+class OSAEnv(ddosa.DataAnalysis):
+    version="10.2"
+
+
+
 try:
     import heaspa
 except:
@@ -77,10 +82,8 @@ class UserCat(ddosa.DataAnalysis):
 
         self.cat=da.DataFile(fn)
 
-class LCTimeBin(ddosa.DataAnalysis):
-    timebin_s=100
-
-    _da_settings=['timebin_s']
+class LCTimeBin(ddosa.LCTimeBin):
+    pass
 
 class JEnergyBins(ddosa.DataAnalysis):
     nchanpow=-4
@@ -132,6 +135,7 @@ class jemx_image(ddosa.DataAnalysis):
     input_jemx=JEMX
     input_refcat=ddosa.GRcat
     input_jbins=JEnergyBins
+    input_osaenv = OSAEnv
 
     cached=True
 
@@ -203,6 +207,7 @@ class jemx_lcr(ddosa.DataAnalysis):
     input_refcat=ddosa.GRcat
     input_jbins=JEnergyBinsLC
     input_timebin=LCTimeBin
+    input_osaenv = OSAEnv
 
     COR_gainModel=2
 
@@ -255,7 +260,7 @@ class jemx_lcr(ddosa.DataAnalysis):
             ht['chanLow'] = " ".join(["%i" % bin['chmin'] for bin in self.input_jbins.bin_interpretation])
             ht['chanHigh'] = " ".join(["%i" % bin['chmax'] for bin in self.input_jbins.bin_interpretation])
 
-        ht['LCR_timeStep']=self.input_timebin.timebin_s
+        ht['LCR_timeStep']=self.input_timebin.time_bin_seconds
         ht['COR_gainModel']=self.COR_gainModel
         ht['jemxNum']=self.input_jemx.num
 
@@ -331,6 +336,7 @@ class jemx_spe(ddosa.DataAnalysis):
   #  input_usercat=UserCat
     input_refcat=ddosa.GRcat
     input_jbins=JEnergyBinsSpectra
+    input_osaenv = OSAEnv
 
   #  input_image=jemx_image  attempt to separate imaging
 
