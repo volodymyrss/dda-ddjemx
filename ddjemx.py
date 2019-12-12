@@ -380,6 +380,7 @@ class jemx_spe(ddosa.DataAnalysis):
 
         bin="jemx_science_analysis"
         os.environ['COMMONSCRIPT']="1"
+        os.environ['REP_BASE_PROD']=self.input_scw.detect_rbp(self.input_scw.scwver)
         ht=ddosa.heatool(bin,wd=wd+"/obs/"+ogc['ogid'].value)
         ht['ogDOL']=self.input_jemx.get_og()
         ht['IC_Group']=self.input_ic.icindex
