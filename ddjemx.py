@@ -209,7 +209,7 @@ class jemx_lcr(ddosa.DataAnalysis):
     input_timebin=LCTimeBin
     input_osaenv = OSAEnv
 
-    COR_gainModel=2
+    COR_gainModel=-1
 
     def get_version(self):
         v=self.get_signature()+"."+self.version
@@ -340,7 +340,7 @@ class jemx_spe(ddosa.DataAnalysis):
 
   #  input_image=jemx_image  attempt to separate imaging
 
-    COR_gainModel=2
+    COR_gainModel=-1
 
     def get_version(self):
         v=self.get_signature()+"."+self.version
