@@ -778,6 +778,15 @@ class JMXGroups(ddosa.DataAnalysis):
 
     outtype="BIN_I"
 
+    def validate_child(self, kind, path):
+        if kind == "lcr":
+            lcrs = fits.open(path)[1].data
+            print("found lightcurves:", lcrs)
+            if len(lcrs) == 0:
+                return False
+
+        return True
+
     def construct_og(self,og_fn):
         scw_og_fns = []
 
@@ -794,7 +803,8 @@ class JMXGroups(ddosa.DataAnalysis):
             for m in members[1:]:
                 for option in ['spe','arf','res','srclres','skyima','lcr']:
                     if hasattr(m,option):
-                        children.append(getattr(m,option).get_path())
+                        if self.validate_child(option, getattr(m,option).get_path()):
+                            children.append(getattr(m,option).get_path())
 
             ddosa.construct_gnrl_scwg_grp(scw, children=children, fn=fn)
 
