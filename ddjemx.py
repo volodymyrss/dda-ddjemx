@@ -910,6 +910,10 @@ class spe_pick(ddosa.DataAnalysis):
             source_names  = list(set(fits.open('sources.fits')[1].data['NAME']))
 
         for source_name in source_names:
+            if source_name == "NEW SOURCE":
+                print("encountered NEW SOURCE: this makes no sense to merge")
+                continue
+
             print("will pick source:", source_name)
 
             sumname = "spec_%s" % source_name.replace(" ","_")
@@ -929,6 +933,8 @@ class spe_pick(ddosa.DataAnalysis):
             ht['sumname']=sumname
             ht['single']='n'
             ht.run()
+
+                
 
             import glob
             print(glob.glob("*"))
