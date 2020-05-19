@@ -27,6 +27,9 @@ except:
 class ExceptionJ_SCW_NO_MINIMUM_DATA(da.AnalysisException):
     pass
 
+class ExceptionJ_SCW_LackingData(da.AnalysisException):
+    pass
+
 class ExceptionNoImageProduced(da.AnalysisException):
     pass
 
@@ -412,6 +415,8 @@ class jemx_spe(ddosa.DataAnalysis):
         except pilton.HEAToolException as ex:
             if 'J_SCW_NO_MINIMUM_DATA' in ht.output:
                 raise ExceptionJ_SCW_NO_MINIMUM_DATA(dict(scw=self.input_scw.scwid,jemx=self.input_jemx.get_name()))
+            elif '-SPTI-* was not found' in ht.output:
+                raise ExceptionJ_SCW_LackingData(dict(scw=self.input_scw.scwid,jemx=self.input_jemx.get_name()))
             else:
                 raise
 
