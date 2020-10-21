@@ -1,4 +1,4 @@
-from __future__ import print_function
+
 
 import numpy as np
 from copy import deepcopy
@@ -658,7 +658,7 @@ class mosaic_jemx(ddosa.DataAnalysis):
                     sens_stats.append([imageobj.assumptions, statistic])
 
                     if sens_keys is None:
-                        sens_keys = statistic.keys()
+                        sens_keys = list(statistic.keys())
                         sens_file.write("fn " + (" ".join(sens_keys)) + "\n")
 
                     sens_file.write(image + " ")
@@ -831,8 +831,8 @@ class JMXGroups(ddosa.DataAnalysis):
 
         ddosa.set_attr({'INSTRUME': self.input_jemx.get_NAME()}, og_fn)
 
-        ddosa.set_attr({'TSTART': min(zip(*boundaries)[0])}, og_fn)
-        ddosa.set_attr({'TSTOP': max(zip(*boundaries)[0])}, og_fn)
+        ddosa.set_attr({'TSTART': min(list(zip(*boundaries))[0])}, og_fn)
+        ddosa.set_attr({'TSTOP': max(list(zip(*boundaries))[0])}, og_fn)
 
         print("boundaries",boundaries)
 
