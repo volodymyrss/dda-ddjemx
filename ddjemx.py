@@ -918,6 +918,10 @@ class spe_pick(ddosa.DataAnalysis):
             if source_name == "NEW SOURCE":
                 print("encountered NEW SOURCE: this makes no sense to merge")
                 continue
+            
+            if source_name == "CONFUSED ID":
+                print("encountered CONFUSED ID: this makes no sense to merge, and causes segfault!")
+                continue
 
             print("will pick source:", source_name)
 
