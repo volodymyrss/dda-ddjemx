@@ -417,6 +417,8 @@ class jemx_spe(ddosa.DataAnalysis):
                 raise ExceptionJ_SCW_NO_MINIMUM_DATA(dict(scw=self.input_scw.scwid,jemx=self.input_jemx.get_name()))
             elif '-SPTI-* was not found' in ht.output:
                 raise ExceptionJ_SCW_LackingData(dict(scw=self.input_scw.scwid,jemx=self.input_jemx.get_name()))
+            elif 'Floating point exception' in ht.output:
+                raise ExceptionNoSpectraProduced(dict(scw=self.input_scw.scwid,jemx=self.input_jemx.get_name()))
             else:
                 raise
 
