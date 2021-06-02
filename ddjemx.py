@@ -356,7 +356,7 @@ class jemx_spe(ddosa.DataAnalysis):
 
     cached=True
 
-    version="v1.2.1"
+    version="v1.2.2"
 
     def main(self):
         open("scw.list","w").write(self.input_scw.swgpath+"[1]")
