@@ -189,6 +189,8 @@ class jemx_image(ddosa.DataAnalysis):
             if 'J_SCW_NO_MINIMUM_DATA' in ht.output:
                 raise ExceptionJ_SCW_NO_MINIMUM_DATA(dict(scw=self.input_scw.scwid,jemx=self.input_jemx.get_name()))
 
+        if 'segmentation violation' in ht.output:
+            raise SegFault()
 
         name=self.input_jemx.get_name()
 
@@ -275,6 +277,9 @@ class jemx_lcr(ddosa.DataAnalysis):
         except pilton.HEAToolException as ex:
             if 'J_SCW_NO_MINIMUM_DATA' in ht.output:
                 raise ExceptionJ_SCW_NO_MINIMUM_DATA(dict(scw=self.input_scw.scwid,jemx=self.input_jemx.get_name()))
+
+        if 'segmentation violation' in ht.output:
+            raise SegFault()
 
         name=self.input_jemx.get_name()
         scwpath=ht.cwd+"/scw/"+self.input_scw.scwid
