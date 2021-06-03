@@ -145,7 +145,7 @@ class jemx_image(ddosa.DataAnalysis):
 
     cached=True
 
-    version="v2.2.1"
+    version="v2.2.2"
 
     def main(self):
         open("scw.list","w").write(self.input_scw.swgpath+"[1]")
@@ -227,7 +227,7 @@ class jemx_lcr(ddosa.DataAnalysis):
 
     cached=True
 
-    version="v1.3.2"
+    version="v1.3.3"
 
     def main(self):
         open("scw.list","w").write(self.input_scw.swgpath+"[1]")
