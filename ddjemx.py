@@ -4,6 +4,7 @@ import numpy as np
 from copy import deepcopy
 import os
 import subprocess
+import glob
 
 import ddosa
 import pilton
@@ -472,7 +473,11 @@ class JRMF(ddosa.DataAnalysis):
                         cmd,
                         env=env,
                     )
-        self.rmf=da.DataFile(fn)
+
+        if os.path.exists(fn):
+            self.rmf=da.DataFile(fn)
+        else:
+            raise RuntimeError(f"no {fn} found, have this: {glob.glob('*')}")
 
 class ProcessJSpectra(ddosa.DataAnalysis):
     input_spectrum=jemx_spe
