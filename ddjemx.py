@@ -40,6 +40,9 @@ class ExceptionNoSpectraProduced(da.AnalysisException):
 class ExceptionNoLCProduced(da.AnalysisException):
     pass
 
+class SegFault(Exception):
+    pass
+
 class JEMX(da.DataAnalysis):
     num=1
 
@@ -143,7 +146,7 @@ class jemx_image(ddosa.DataAnalysis):
 
     cached=True
 
-    version="v2.2.1"
+    version="v2.2.2"
 
     def main(self):
         open("scw.list","w").write(self.input_scw.swgpath+"[1]")
@@ -187,6 +190,8 @@ class jemx_image(ddosa.DataAnalysis):
             if 'J_SCW_NO_MINIMUM_DATA' in ht.output:
                 raise ExceptionJ_SCW_NO_MINIMUM_DATA(dict(scw=self.input_scw.scwid,jemx=self.input_jemx.get_name()))
 
+        if 'segmentation violation' in ht.output:
+            raise SegFault()
 
         name=self.input_jemx.get_name()
 
@@ -223,7 +228,7 @@ class jemx_lcr(ddosa.DataAnalysis):
 
     cached=True
 
-    version="v1.3.2"
+    version="v1.3.3"
 
     def main(self):
         open("scw.list","w").write(self.input_scw.swgpath+"[1]")
@@ -273,6 +278,9 @@ class jemx_lcr(ddosa.DataAnalysis):
         except pilton.HEAToolException as ex:
             if 'J_SCW_NO_MINIMUM_DATA' in ht.output:
                 raise ExceptionJ_SCW_NO_MINIMUM_DATA(dict(scw=self.input_scw.scwid,jemx=self.input_jemx.get_name()))
+
+        if 'segmentation violation' in ht.output:
+            raise SegFault()
 
         name=self.input_jemx.get_name()
         scwpath=ht.cwd+"/scw/"+self.input_scw.scwid
@@ -354,7 +362,7 @@ class jemx_spe(ddosa.DataAnalysis):
 
     cached=True
 
-    version="v1.2.1"
+    version="v1.2.2"
 
     def main(self):
         open("scw.list","w").write(self.input_scw.swgpath+"[1]")
@@ -422,6 +430,9 @@ class jemx_spe(ddosa.DataAnalysis):
                 raise ExceptionNoSpectraProduced(dict(scw=self.input_scw.scwid,jemx=self.input_jemx.get_name()))
             else:
                 raise
+
+        if 'segmentation violation' in ht.output:
+            raise SegFault()
 
         name=self.input_jemx.get_name()
         scwpath=ht.cwd+"/scw/"+self.input_scw.scwid
