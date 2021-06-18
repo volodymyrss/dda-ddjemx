@@ -979,6 +979,7 @@ class spe_pick(ddosa.DataAnalysis):
 
 class lc_pick(ddosa.DataAnalysis):
     input_lcgroups = JMXLCGroups
+    input_timebin = LCTimeBin
     input_jemx=JEMX
 
     source_names=[]
@@ -1041,7 +1042,8 @@ class lc_pick(ddosa.DataAnalysis):
             if os.path.exists(sumname+".fits"):
                 setattr(self,sumname,da.DataFile(sumname+".fits"))
 
-        self.comment = "this is a comment"
+        if self.input_timebin.time_bin_seconds < 0.1:
+            self.comment = "please note that minimum time bin for jemx is 0.1 s; requesting smaller value produces lightcurve with 4 s bins (the default)"
         self.warning = "this is a warning"
 
 
