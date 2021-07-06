@@ -488,7 +488,7 @@ class JRMF(ddosa.DataAnalysis):
         if os.path.exists(fn):
             self.rmf=da.DataFile(fn)
         else:
-            raise RuntimeError(f"no {fn} found, have this: {glob.glob('*')}")
+            raise RuntimeError("no %s found, have this: %s"%(fn, glob.glob('*')))
 
 class ProcessJSpectra(ddosa.DataAnalysis):
     input_spectrum=jemx_spe
