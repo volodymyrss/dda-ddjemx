@@ -148,6 +148,14 @@ class jemx_image(ddosa.DataAnalysis):
 
     version="v2.2.2"
 
+    COR_gainModel=-1
+
+    def get_version(self):
+        v = self.get_signature() + "." + self.version
+        if self.COR_gainModel != 1:
+            v += ".gM%i" % self.COR_gainModel
+        return v
+
     def main(self):
         open("scw.list","w").write(self.input_scw.swgpath+"[1]")
 
@@ -1081,6 +1089,7 @@ class mosaic_jemx_osa(ddosa.DataAnalysis):
         ht = ddosa.heatool("jemx_science_analysis",env=env)
         ht['ogDOL'] = "ogg.fits"
         ht['IC_Group']=self.input_ic.icindex
+        ht['COR_gainModel']=self.COR_gainModel
         ht['jemxNum']=self.input_jemx.num
         ht['CAT_I_refCat'] = self.input_refcat.cat
         ht['startLevel']="IMA2"
