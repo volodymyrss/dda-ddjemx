@@ -40,6 +40,9 @@ class ExceptionNoSpectraProduced(da.AnalysisException):
 class ExceptionNoLCProduced(da.AnalysisException):
     pass
 
+class OSACrash(da.AnalysisException):
+    pass
+
 class SegFault(Exception):
     pass
 
@@ -421,6 +424,8 @@ class jemx_spe(ddosa.DataAnalysis):
         
         try:
             ht.run()
+        except UnicodeEncodeError:
+            raise OSACrash(ht.output[-100:])
         except pilton.HEAToolException as ex:
             if 'J_SCW_NO_MINIMUM_DATA' in ht.output:
                 raise ExceptionJ_SCW_NO_MINIMUM_DATA(dict(scw=self.input_scw.scwid,jemx=self.input_jemx.get_name()))
