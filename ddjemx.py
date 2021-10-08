@@ -40,6 +40,9 @@ class ExceptionNoSpectraProduced(da.AnalysisException):
 class ExceptionNoLCProduced(da.AnalysisException):
     pass
 
+class OSACrash(da.AnalysisException):
+    pass
+
 class SegFault(Exception):
     pass
 
@@ -421,6 +424,8 @@ class jemx_spe(ddosa.DataAnalysis):
         
         try:
             ht.run()
+        except UnicodeEncodeError as e: 
+            raise OSACrash(str(e))
         except pilton.HEAToolException as ex:
             if 'J_SCW_NO_MINIMUM_DATA' in ht.output:
                 raise ExceptionJ_SCW_NO_MINIMUM_DATA(dict(scw=self.input_scw.scwid,jemx=self.input_jemx.get_name()))
@@ -495,7 +500,7 @@ class JRMF(ddosa.DataAnalysis):
         if os.path.exists(fn):
             self.rmf=da.DataFile(fn)
         else:
-            raise RuntimeError(f"no {fn} found, have this: {glob.glob('*')}")
+            raise RuntimeError("no %s found, have this: %s"%(fn, glob.glob('*')))
 
 class ProcessJSpectra(ddosa.DataAnalysis):
     input_spectrum=jemx_spe
