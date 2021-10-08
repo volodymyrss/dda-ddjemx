@@ -460,6 +460,13 @@ class JRMF(ddosa.DataAnalysis):
 
     version="v1"
 
+    def get_version(self):
+        v = super().get_version()
+        fversion = subprocess.check_output(["fversion"]).decode().strip()
+
+        return v + ".heasoft_" + fversion
+
+
     def main(self):
         code='STD_%.3i'%(2**(-self.input_jbins.nchanpow))
         fn='jemx_rmf_%s.fits'%code
