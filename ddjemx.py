@@ -159,10 +159,20 @@ class jemx_image(ddosa.DataAnalysis):
 
         if os.path.exists("obs"):
             os.rename("obs","obs."+str(time.time()))
+        
+        env = None
+        if self.input_scw.scwid.endswith('.000'):
+            env=deepcopy(os.environ)
+            env['REP_BASE_PROD'] = os.environ.get("REP_BASE_PROD_NRT")
 
         wd=os.getcwd().replace("[","_").replace("]","_")
         bin="og_create"
-        ogc=ddosa.heatool(bin)
+
+        if env is not None:
+            ogc=ddosa.heatool(bin, env=env)
+        else:
+            ogc=ddosa.heatool(bin)
+
         ogc['idxSwg']="scw.list"
         ogc['instrument']=self.input_jemx.get_NAME()
         ogc['ogid']="scw_"+self.input_scw.scwid
@@ -173,6 +183,12 @@ class jemx_image(ddosa.DataAnalysis):
 
         bin="jemx_science_analysis"
         ht=ddosa.heatool(bin,wd=wd+"/obs/"+ogc['ogid'].value)
+
+        if env is not None:
+            ogc=ddosa.heatool(bin, env=env)
+        else:
+            ogc=ddosa.heatool(bin)
+
         ht['ogDOL']=self.input_jemx.get_og()
         ht['IC_Group']=self.input_ic.icindex
         ht['IC_Alias']="OSA"
