@@ -46,7 +46,7 @@ class OSACrash(da.AnalysisException):
 class SegFault(Exception):
     pass
 
-class NoGAIN(Exception):
+class NoGAIN(da.AnalysisException):
     pass
 
 class JEMX(da.DataAnalysis):
