@@ -164,6 +164,7 @@ class jemx_image(ddosa.DataAnalysis):
         if self.input_scw.scwid.endswith('.000'):
             env=deepcopy(os.environ)
             env['REP_BASE_PROD'] = os.environ.get("REP_BASE_PROD_NRT")
+            print("setting RBP for NRT:", env['REP_BASE_PROD'])
 
         wd=os.getcwd().replace("[","_").replace("]","_")
         bin="og_create"
