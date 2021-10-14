@@ -182,7 +182,7 @@ class jemx_image(ddosa.DataAnalysis):
         ht['endLevel']="IMA"
 
         if self.input_scw.scwid.endswith('.000'):
-            ht['COR_gainModel']=0
+            ht['COR_gainModel'] = 2
 
         if self.input_jbins.bins is None:
             ht['nChanBins']=self.input_jbins.nchanpow
