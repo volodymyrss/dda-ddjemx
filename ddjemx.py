@@ -472,7 +472,24 @@ class JRMF(ddosa.DataAnalysis):
 
     cached=True
 
-    version="v1"
+    version="v1.1"
+
+    def get_version(self):
+        v = super().get_version()
+        fversion = subprocess.check_output(["fversion"]).decode().strip()
+
+        if '6.25' in fversion:
+            return v + ".heasoft_safe"
+
+        if '6.24' in fversion:
+            return v + ".heasoft_safe"
+        
+        if '6.26' in fversion:
+            return v + ".heasoft_safe"
+
+        return v + ".heasoft_UNSAFE"
+
+
 
     def main(self):
         code='STD_%.3i'%(2**(-self.input_jbins.nchanpow))
