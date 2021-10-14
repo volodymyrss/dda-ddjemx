@@ -162,33 +162,33 @@ class jemx_image(ddosa.DataAnalysis):
         
         env = None
         if self.input_scw.scwid.endswith('.000'):
-            env=deepcopy(os.environ)
+            env = deepcopy(os.environ)
             env['REP_BASE_PROD'] = os.environ.get("REP_BASE_PROD_NRT")
-            print("setting RBP for NRT:", env['REP_BASE_PROD'])
+            print("\033[31msetting RBP for NRT:", env['REP_BASE_PROD'], "\033[0m")
 
         wd=os.getcwd().replace("[","_").replace("]","_")
         bin="og_create"
 
         if env is not None:
-            ogc=ddosa.heatool(bin, env=env)
+            ogc = ddosa.heatool(bin, env=env)
         else:
-            ogc=ddosa.heatool(bin)
+            ogc = ddosa.heatool(bin)
 
-        ogc['idxSwg']="scw.list"
-        ogc['instrument']=self.input_jemx.get_NAME()
-        ogc['ogid']="scw_"+self.input_scw.scwid
+        ogc['idxSwg'] = "scw.list"
+        ogc['instrument'] = self.input_jemx.get_NAME()
+        ogc['ogid'] = "scw_" + self.input_scw.scwid
         ogc['baseDir']=wd # dangerous
         ogc.run()
+            
+        print("\033[31m OG created! \033[0m")
 
         scwroot="scw/"+self.input_scw.scwid
 
-        bin="jemx_science_analysis"
-        ht=ddosa.heatool(bin,wd=wd+"/obs/"+ogc['ogid'].value)
+        bin = "jemx_science_analysis"
+        ht = ddosa.heatool(bin,wd=wd+"/obs/"+ogc['ogid'].value)
 
         if env is not None:
-            ogc=ddosa.heatool(bin, env=env)
-        else:
-            ogc=ddosa.heatool(bin)
+            ht = ddosa.heatool(bin,wd=wd+"/obs/"+ogc['ogid'].value, env=env)
 
         ht['ogDOL']=self.input_jemx.get_og()
         ht['IC_Group']=self.input_ic.icindex
@@ -217,6 +217,9 @@ class jemx_image(ddosa.DataAnalysis):
                 raise ExceptionJ_SCW_NO_MINIMUM_DATA(dict(scw=self.input_scw.scwid,jemx=self.input_jemx.get_name()))
         
         if 'J_COR_BAD_GAINHISTDOL' in ht.output:
+            raise NoGAIN()
+        
+        if 'Error_2: Task jemx_science_analysis terminating' in ht.output:
             raise NoGAIN()
 
         if 'segmentation violation' in ht.output:
