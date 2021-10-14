@@ -46,6 +46,9 @@ class OSACrash(da.AnalysisException):
 class SegFault(Exception):
     pass
 
+class NoGAIN(Exception):
+    pass
+
 class JEMX(da.DataAnalysis):
     num=1
 
@@ -178,6 +181,9 @@ class jemx_image(ddosa.DataAnalysis):
         ht['startLevel']="COR"
         ht['endLevel']="IMA"
 
+        if self.input_scw.scwid.endswith('.000'):
+            ht['COR_gainModel']=0
+
         if self.input_jbins.bins is None:
             ht['nChanBins']=self.input_jbins.nchanpow
         else:
@@ -195,6 +201,9 @@ class jemx_image(ddosa.DataAnalysis):
 
         if 'segmentation violation' in ht.output:
             raise SegFault()
+        
+        if 'No Offline Gain Calibration File' in ht.output:
+            raise NoGAIN()
 
         name=self.input_jemx.get_name()
 
