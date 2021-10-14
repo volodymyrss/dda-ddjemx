@@ -202,8 +202,8 @@ class jemx_image(ddosa.DataAnalysis):
         if 'segmentation violation' in ht.output:
             raise SegFault()
         
-        if 'No Offline Gain Calibration File' in ht.output:
-            raise NoGAIN()
+        #if 'No Offline Gain Calibration File' in ht.output:
+        #    raise NoGAIN()
 
         name=self.input_jemx.get_name()
 
