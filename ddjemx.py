@@ -46,6 +46,9 @@ class OSACrash(da.AnalysisException):
 class SegFault(Exception):
     pass
 
+class NoGAIN(Exception):
+    pass
+
 class JEMX(da.DataAnalysis):
     num=1
 
@@ -149,27 +152,44 @@ class jemx_image(ddosa.DataAnalysis):
 
     cached=True
 
-    version="v2.2.2"
+    version="v2.2.4"
 
     def main(self):
         open("scw.list","w").write(self.input_scw.swgpath+"[1]")
 
         if os.path.exists("obs"):
             os.rename("obs","obs."+str(time.time()))
+        
+        env = None
+        if self.input_scw.scwid.endswith('.000'):
+            env = deepcopy(os.environ)
+            env['REP_BASE_PROD'] = os.environ.get("REP_BASE_PROD_NRT")
+            print("\033[31msetting RBP for NRT:", env['REP_BASE_PROD'], "\033[0m")
 
         wd=os.getcwd().replace("[","_").replace("]","_")
         bin="og_create"
-        ogc=ddosa.heatool(bin)
-        ogc['idxSwg']="scw.list"
-        ogc['instrument']=self.input_jemx.get_NAME()
-        ogc['ogid']="scw_"+self.input_scw.scwid
+
+        if env is not None:
+            ogc = ddosa.heatool(bin, env=env)
+        else:
+            ogc = ddosa.heatool(bin)
+
+        ogc['idxSwg'] = "scw.list"
+        ogc['instrument'] = self.input_jemx.get_NAME()
+        ogc['ogid'] = "scw_" + self.input_scw.scwid
         ogc['baseDir']=wd # dangerous
         ogc.run()
+            
+        print("\033[31m OG created! \033[0m")
 
         scwroot="scw/"+self.input_scw.scwid
 
-        bin="jemx_science_analysis"
-        ht=ddosa.heatool(bin,wd=wd+"/obs/"+ogc['ogid'].value)
+        bin = "jemx_science_analysis"
+        ht = ddosa.heatool(bin,wd=wd+"/obs/"+ogc['ogid'].value)
+
+        if env is not None:
+            ht = ddosa.heatool(bin,wd=wd+"/obs/"+ogc['ogid'].value, env=env)
+
         ht['ogDOL']=self.input_jemx.get_og()
         ht['IC_Group']=self.input_ic.icindex
         ht['IC_Alias']="OSA"
@@ -177,6 +197,9 @@ class jemx_image(ddosa.DataAnalysis):
         ht['CAT_I_refCat'] = self.input_refcat.cat
         ht['startLevel']="COR"
         ht['endLevel']="IMA"
+
+        if self.input_scw.scwid.endswith('.000'):
+            ht['COR_gainModel'] = 2
 
         if self.input_jbins.bins is None:
             ht['nChanBins']=self.input_jbins.nchanpow
@@ -192,9 +215,18 @@ class jemx_image(ddosa.DataAnalysis):
         except pilton.HEAToolException as ex:
             if 'J_SCW_NO_MINIMUM_DATA' in ht.output:
                 raise ExceptionJ_SCW_NO_MINIMUM_DATA(dict(scw=self.input_scw.scwid,jemx=self.input_jemx.get_name()))
+        
+        if 'J_COR_BAD_GAINHISTDOL' in ht.output:
+            raise NoGAIN()
+        
+        if 'Error_2: Task jemx_science_analysis terminating' in ht.output:
+            raise NoGAIN()
 
         if 'segmentation violation' in ht.output:
             raise SegFault()
+        
+        #if 'No Offline Gain Calibration File' in ht.output:
+        #    raise NoGAIN()
 
         name=self.input_jemx.get_name()
 
