@@ -927,7 +927,7 @@ class spe_pick(ddosa.DataAnalysis):
 
     def get_version(self):
         try:
-            return super(spe_pick, self).get_version()+"."+(".".join([m.replace(" ","_") for m in self.source_names]))
+            return super().get_version()+"."+(".".join([m.replace(" ","_") for m in self.source_names]))
         except:
             return "spe_pick.UNDEFINED"
 
@@ -1013,7 +1013,7 @@ class lc_pick(ddosa.DataAnalysis):
 
     def get_version(self):
         try:
-            return super(lc_pick, self).get_version()+"."+(".".join([m.replace(" ","_") for m in self.source_names]))
+            return super().get_version()+"."+(".".join([m.replace(" ","_") for m in self.source_names]))
         except:
             return "lc_pick.UNDEFINED"
 
@@ -1080,7 +1080,7 @@ class mosaic_jemx_osa(ddosa.DataAnalysis):
     version="v2"
 
     def get_version(self):
-        return super(mosaic_jemx_osa, self).get_version()
+        return super().get_version()
 
     def main(self):
         self.input_groups.construct_og("ogg.fits")
