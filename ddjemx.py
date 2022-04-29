@@ -52,6 +52,9 @@ class SegFault(Exception):
 class NoGAIN(Exception):
     pass
 
+class UnknownJemxError(Exception):
+    pass
+
 class JEMX(da.DataAnalysis):
     num=1
 
@@ -222,14 +225,14 @@ class jemx_image(ddosa.DataAnalysis):
         if 'J_COR_BAD_GAINHISTDOL' in ht.output:
             raise NoGAIN()
         
-        if 'Error_2: Task jemx_science_analysis terminating' in ht.output:
-            raise NoGAIN()
-        
         if 'Element JMX2-SPEC-* was not found' in ht.output:
             raise NoUsefulData()
         
         if 'Element JMX1-SPEC-* was not found' in ht.output:
             raise NoUsefulData()
+        
+        if 'Error_2: Task jemx_science_analysis terminating' in ht.output:
+            raise UnknownJemxError()
 
         if 'segmentation violation' in ht.output:
             raise SegFault()
