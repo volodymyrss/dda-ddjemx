@@ -43,6 +43,9 @@ class ExceptionNoLCProduced(da.AnalysisException):
 class OSACrash(da.AnalysisException):
     pass
 
+class NoUsefulData(da.AnalysisException):
+    pass
+
 class SegFault(Exception):
     pass
 
@@ -221,6 +224,12 @@ class jemx_image(ddosa.DataAnalysis):
         
         if 'Error_2: Task jemx_science_analysis terminating' in ht.output:
             raise NoGAIN()
+        
+        if 'Element JMX2-SPEC-* was not found' in ht.output:
+            raise NoUsefulData()
+        
+        if 'Element JMX1-SPEC-* was not found' in ht.output:
+            raise NoUsefulData()
 
         if 'segmentation violation' in ht.output:
             raise SegFault()
