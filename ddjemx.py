@@ -409,7 +409,7 @@ class jemx_spe(ddosa.DataAnalysis):
 
     cached=True
 
-    version="v1.2.2"
+    version="v1.2.3"
 
     def main(self):
         open("scw.list","w").write(self.input_scw.swgpath+"[1]")
@@ -453,7 +453,8 @@ class jemx_spe(ddosa.DataAnalysis):
         ht['skipLevels']="LCR"
         #ht['skipLevels']="BIN_I,IMA,BIN_T,LCR" # attempt to separate imaging
         #ht['skipLevels']="CAT_I,BIN_I,IMA,BIN_T,LCR"
-        ht['skipSPEfirstScw']="n"
+        ht['skipSPEfirstScw']="y"
+        #ht['skipSPEfirstScw']="n"
 
         if self.input_jbins.bins is None:
             ht['nChanBins']=self.input_jbins.nchanpow
