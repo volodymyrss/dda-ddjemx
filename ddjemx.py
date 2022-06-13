@@ -883,6 +883,11 @@ class JMXGroups(ddosa.DataAnalysis):
 
         for members in self.members:
             scw=members[0]
+            if not os.path.exists(scw.scwpath + "/swg.fits"):
+                print("\033[31mWARNING! scw is missing, skipping", scw.scwpath, "\033[0m")
+                continue
+
+
             fn = "og_%s.fits" % scw.input_scwid.str()
 
             children=[
@@ -896,6 +901,8 @@ class JMXGroups(ddosa.DataAnalysis):
                             children.append(getattr(m,option).get_path())
 
             ddosa.construct_gnrl_scwg_grp(scw, children=children, fn=fn)
+
+                
 
             ddosa.import_attr(scw.scwpath + "/swg.fits",
                         ["OBTSTART", "OBTEND", "TSTART", "TSTOP", "SW_TYPE", "TELAPSE", "SWID", "SWBOUND"],fn)
