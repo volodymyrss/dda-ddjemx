@@ -1092,6 +1092,7 @@ class lc_pick(ddosa.DataAnalysis):
 
         print("found the following sources",source_names, source_ids)
 
+        attached_files = []
         for source_name, source_id in zip(source_names,source_ids):
             sumname = "lc_%s" % source_name.replace(" ","_").replace("+","_").replace("-","_")
 
@@ -1108,13 +1109,18 @@ class lc_pick(ddosa.DataAnalysis):
 
             ht.run()
 
-            import glob
-            print(glob.glob("*"))
+            # import glob
+            # print(glob.glob("*"))
 
             #fits.open(self.input_rmf.rmf.get_path()).writeto(sumname + "_rmf.fits", overwrite=True)
 
-            if os.path.exists(sumname+".fits"):
-                setattr(self,sumname,da.DataFile(sumname+".fits"))
+            sumfile_fn = sumname + ".fits"
+            if os.path.exists(sumfile_fn):
+                setattr(self,sumname,da.DataFile(sumfile_fn))
+                attached_files.append(sumfile_fn)
+
+        for i, sumfile_fn in enumerate(attached_files):
+            print("attached file: ", i, "/", len(attached_files), sumfile_fn)
 
         if self.input_timebin.time_bin_seconds < 0.1:
             self.comment = "please note that minimum time bin for jemx is 0.1 s; requesting smaller value produces lightcurve with 4 s bins (the default)"
