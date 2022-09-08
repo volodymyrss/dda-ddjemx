@@ -302,9 +302,7 @@ class jemx_lcr(ddosa.DataAnalysis):
 
         wd=os.getcwd().replace("[","_").replace("]","_")
         bin="og_create"
-        ogc=ddosa.heatool(bin, env=env_for_scw(self)
-_for_scw(self)
-)
+        ogc=ddosa.heatool(bin, env=env_for_scw(self))
         ogc['idxSwg']="scw.list"
         ogc['instrument']=self.input_jemx.get_NAME()
         ogc['ogid']="scw_"+self.input_scw.scwid
