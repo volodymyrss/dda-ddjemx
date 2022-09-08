@@ -148,6 +148,22 @@ class JEnergyBinsSpectra(JEnergyBins):
 class JEnergyBinsLC(JEnergyBins):
     nchanpow=-1
 
+
+def env_for_scw(self):
+    env = None
+    if hasattr(self, 'input_scw'):
+        if self.input_scw.scwid.endswith('.000'):
+            env = deepcopy(os.environ)
+            env['REP_BASE_PROD'] = os.environ.get("REP_BASE_PROD_NRT")
+            print("\033[31msetting RBP for NRT in ", self, ":", env['REP_BASE_PROD'], "\033[0m")
+        else:
+            print("\033[31mnot nrt, so NOT setting RBP for NRT in ", self, ":", os.getenv('REP_BASE_PROD'), "\033[0m")
+    else:
+        print("\033[31mno scw, so NOT setting RBP for NRT in ", self, ":", os.getenv('REP_BASE_PROD'), "\033[0m")
+
+    return env
+
+
 class jemx_image(ddosa.DataAnalysis):
     input_scw=ddosa.ScWData
     input_ic=ddosa.ICRoot
@@ -165,21 +181,14 @@ class jemx_image(ddosa.DataAnalysis):
 
         if os.path.exists("obs"):
             os.rename("obs","obs."+str(time.time()))
-        
-        env = None
-        if self.input_scw.scwid.endswith('.000'):
-            env = deepcopy(os.environ)
-            env['REP_BASE_PROD'] = os.environ.get("REP_BASE_PROD_NRT")
-            print("\033[31msetting RBP for NRT:", env['REP_BASE_PROD'], "\033[0m")
+
+        env = env_for_scw(self)        
 
         wd=os.getcwd().replace("[","_").replace("]","_")
         bin="og_create"
 
-        if env is not None:
-            ogc = ddosa.heatool(bin, env=env)
-        else:
-            ogc = ddosa.heatool(bin)
-
+        ogc = ddosa.heatool(bin, env=env_for_scw(self)
+)        
         ogc['idxSwg'] = "scw.list"
         ogc['instrument'] = self.input_jemx.get_NAME()
         ogc['ogid'] = "scw_" + self.input_scw.scwid
@@ -191,10 +200,8 @@ class jemx_image(ddosa.DataAnalysis):
         scwroot="scw/"+self.input_scw.scwid
 
         bin = "jemx_science_analysis"
-        ht = ddosa.heatool(bin,wd=wd+"/obs/"+ogc['ogid'].value)
-
-        if env is not None:
-            ht = ddosa.heatool(bin,wd=wd+"/obs/"+ogc['ogid'].value, env=env)
+        ht = ddosa.heatool(bin,wd=wd+"/obs/"+ogc['ogid'].value, env=env_for_scw(self)
+)
 
         ht['ogDOL']=self.input_jemx.get_og()
         ht['IC_Group']=self.input_ic.icindex
@@ -237,6 +244,9 @@ class jemx_image(ddosa.DataAnalysis):
         if 'segmentation violation' in ht.output:
             raise SegFault()
         
+        if 'Segmentation fault' in ht.output:
+            raise SegFault()
+        
         #if 'No Offline Gain Calibration File' in ht.output:
         #    raise NoGAIN()
 
@@ -275,7 +285,7 @@ class jemx_lcr(ddosa.DataAnalysis):
 
     cached=True
 
-    version="v1.3.3"
+    version="v1.3.4"
 
     def main(self):
         open("scw.list","w").write(self.input_scw.swgpath+"[1]")
@@ -283,9 +293,18 @@ class jemx_lcr(ddosa.DataAnalysis):
         if os.path.exists("obs"):
             os.rename("obs","obs."+str(time.time()))
 
+        env = None
+        if self.input_scw.scwid.endswith('.000'):
+            env = deepcopy(os.environ)
+            env['REP_BASE_PROD'] = os.environ.get("REP_BASE_PROD_NRT")
+            print("\033[31msetting RBP for NRT:", env['REP_BASE_PROD'], "\033[0m")
+
+
         wd=os.getcwd().replace("[","_").replace("]","_")
         bin="og_create"
-        ogc=ddosa.heatool(bin)
+        ogc=ddosa.heatool(bin, env=env_for_scw(self)
+_for_scw(self)
+)
         ogc['idxSwg']="scw.list"
         ogc['instrument']=self.input_jemx.get_NAME()
         ogc['ogid']="scw_"+self.input_scw.scwid
@@ -296,7 +315,8 @@ class jemx_lcr(ddosa.DataAnalysis):
 
         bin="jemx_science_analysis"
         os.environ['COMMONSCRIPT']="1"
-        ht=ddosa.heatool(bin,wd=wd+"/obs/"+ogc['ogid'].value)
+        ht=ddosa.heatool(bin,wd=wd+"/obs/"+ogc['ogid'].value, env=env_for_scw(self)
+)
         ht['ogDOL']=self.input_jemx.get_og()
         ht['IC_Group']=self.input_ic.icindex
         ht['IC_Alias']="OSA"
@@ -419,7 +439,8 @@ class jemx_spe(ddosa.DataAnalysis):
 
         wd=os.getcwd().replace("[","_").replace("]","_")
         bin="og_create"
-        ogc=ddosa.heatool(bin)
+        ogc=ddosa.heatool(bin, env=env_for_scw(self)
+)
         ogc['idxSwg']="scw.list"
         ogc['instrument']=self.input_jemx.get_NAME()
         ogc['ogid']="scw_"+self.input_scw.scwid
@@ -440,7 +461,8 @@ class jemx_spe(ddosa.DataAnalysis):
         bin="jemx_science_analysis"
         os.environ['COMMONSCRIPT']="1"
         os.environ['REP_BASE_PROD']=ddosa.detect_rbp(self.input_scw.scwver)
-        ht=ddosa.heatool(bin,wd=wd+"/obs/"+ogc['ogid'].value)
+        ht=ddosa.heatool(bin,wd=wd+"/obs/"+ogc['ogid'].value, env=env_for_scw(self)
+)
         ht['ogDOL']=self.input_jemx.get_og()
         ht['IC_Group']=self.input_ic.icindex
         ht['IC_Alias']="OSA"
@@ -549,7 +571,8 @@ class JRMF(ddosa.DataAnalysis):
 
         subprocess.check_call(
                         cmd,
-                        env=env,
+                        env=env_for_scw(self)
+,
                     )
 
         if os.path.exists(fn):
@@ -806,7 +829,8 @@ class mosaic_jemx(ddosa.DataAnalysis):
             regionfile = mosaic.replace(".fits", ".reg")
 
             ht = ddosa.heatool(
-                os.environ['COMMON_INTEGRAL_SOFTDIR'] + "/imaging/varmosaic/varmosaic_exposure/varmosaic")
+                os.environ['COMMON_INTEGRAL_SOFTDIR'] + "/imaging/varmosaic/varmosaic_exposure/varmosaic", env=env_for_scw(self)
+)
             ht['pixdivide'] = self.pixdivide
             ht['filelist'] = listfile
             ht['outimage'] = mosaic
@@ -821,7 +845,8 @@ class mosaic_jemx(ddosa.DataAnalysis):
 
             ddosa.remove_withtemplate("jmx_sloc_res.fits(JMX1-SLOC-RES.tpl)")
             fn = "jmx_sloc_res.fits"
-            ht = ddosa.heatool("j_ima_src_locator")
+            ht = ddosa.heatool("j_ima_src_locator", env=env_for_scw(self)
+)
             ht['inDOL'] = mosaic + "[2]"
             ht['sigDOL'] = mosaic + "[4]"
             ht['outFile'] = fn
@@ -840,7 +865,8 @@ class mosaic_src_loc(ddosa.DataAnalysis):
 
     def main(self):
         fn="jmx_sloc_res.fits"
-        ht=ddosa.heatool("j_ima_src_locator")
+        ht=ddosa.heatool("j_ima_src_locator", env=env_for_scw(self)
+)
         ht['inDOL'] = self.input_mosaic.skyima.get_path()+"[2]"
         ht['sigDOL'] = self.input_mosaic.skyima.get_path() + "[3]"
         ht['outFile']=fn
@@ -986,7 +1012,8 @@ class spe_pick(ddosa.DataAnalysis):
     def main(self):
         self.input_spegroups.construct_og("ogg.fits")
 
-        dl=ddosa.heatool("dal_list")
+        dl=ddosa.heatool("dal_list", env=env_for_scw(self)
+)
         dl['dol']="ogg.fits"
         dl.run()
 
@@ -998,7 +1025,8 @@ class spe_pick(ddosa.DataAnalysis):
             source_names = self.source_names
         else:
             ddosa.remove_withtemplate("sources.fits(JMX%i-OBS.-RES.tpl)"%self.input_jemx.num)
-            ht = ddosa.heatool("src_collect")
+            ht = ddosa.heatool("src_collect", env=env_for_scw(self)
+)
             ht['group'] = "ogg.fits[1]"
             ht['instName']=self.input_jemx.get_name()
             ht['results']='sources.fits'
@@ -1027,7 +1055,8 @@ class spe_pick(ddosa.DataAnalysis):
             ddosa.remove_withtemplate(sumname+"_arf.fits(JMX%i-PHA1-ARF.tpl)"%self.input_jemx.num)
             
 
-            ht = ddosa.heatool("spe_pick")
+            ht = ddosa.heatool("spe_pick", env=env_for_scw(self)
+)
             ht['group'] = "ogg.fits[1]"
             ht['source']=source_name
             ht['instrument']=self.input_jemx.get_name()
@@ -1072,7 +1101,8 @@ class lc_pick(ddosa.DataAnalysis):
     def main(self):
         self.input_lcgroups.construct_og("ogg.fits")
 
-        dl=ddosa.heatool("dal_list")
+        dl=ddosa.heatool("dal_list", env=env_for_scw(self)
+)
         dl['dol']="ogg.fits"
         dl.run()
 
@@ -1081,7 +1111,8 @@ class lc_pick(ddosa.DataAnalysis):
             source_ids = self.source_ids
         else:
             ddosa.remove_withtemplate("sources.fits(JMX%i-OBS.-RES.tpl)"%self.input_jemx.num)
-            ht = ddosa.heatool("src_collect")
+            ht = ddosa.heatool("src_collect", env=env_for_scw(self)
+)
             ht['group'] = "ogg.fits[1]"
             ht['instName']=self.input_jemx.get_name()
             ht['results']='sources.fits'
@@ -1099,7 +1130,8 @@ class lc_pick(ddosa.DataAnalysis):
             ddosa.remove_withtemplate(sumname+".fits")
             
 
-            ht = ddosa.heatool("lc_pick")
+            ht = ddosa.heatool("lc_pick", env=env_for_scw(self)
+)
             ht['group'] = "ogg.fits[1]"
             ht['source']=source_id
             ht['instrument']=self.input_jemx.get_name()
@@ -1143,7 +1175,8 @@ class mosaic_jemx_osa(ddosa.DataAnalysis):
     def main(self):
         self.input_groups.construct_og("ogg.fits")
 
-        dl=ddosa.heatool("dal_list")
+        dl=ddosa.heatool("dal_list", env=env_for_scw(self)
+)
         dl['dol']="ogg.fits"
         dl.run()
 
@@ -1158,7 +1191,8 @@ class mosaic_jemx_osa(ddosa.DataAnalysis):
         ddosa.remove_withtemplate(fn_mosaic)
 
         #It runs the mosaic production
-        ht = ddosa.heatool("jemx_science_analysis",env=env)
+        ht = ddosa.heatool("jemx_science_analysis",env=env_for_scw(self)
+)
         ht['ogDOL'] = "ogg.fits"
         ht['IC_Group']=self.input_ic.icindex
         ht['jemxNum']=self.input_jemx.num
@@ -1174,7 +1208,8 @@ class mosaic_jemx_osa(ddosa.DataAnalysis):
         fn = self.input_jemx.get_name()+"_sloc_res.fits"
         ddosa.remove_withtemplate(fn)
 
-        ht=ddosa.heatool("j_ima_src_locator")
+        ht=ddosa.heatool("j_ima_src_locator", env=env_for_scw(self)
+)
         ht['inDOL'] = fn_mosaic+"[2]"
         ht['varDOL'] = fn_mosaic + "[3]"
         ht['sigDOL'] = fn_mosaic + "[4]"
@@ -1184,7 +1219,8 @@ class mosaic_jemx_osa(ddosa.DataAnalysis):
         ht.run()
 
         #It identifies sources in the catalog
-        ht = ddosa.heatool("q_identify_srcs")
+        ht = ddosa.heatool("q_identify_srcs", env=env_for_scw(self)
+)
 
         #Naming of instrument is different in this tool, assume it is jemx1 and change if it is jemx2
         instrument=4
