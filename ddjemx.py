@@ -37,6 +37,8 @@ class ExceptionNoImageProduced(da.AnalysisException):
 class ExceptionNoSpectraProduced(da.AnalysisException):
     pass
 
+class ExceptionNoSCPandGainHistory(da.AnalysisException):
+    pass
 class ExceptionNoLCProduced(da.AnalysisException):
     pass
 
@@ -498,6 +500,8 @@ class jemx_spe(ddosa.DataAnalysis):
                 raise ExceptionJ_SCW_LackingData(dict(scw=self.input_scw.scwid,jemx=self.input_jemx.get_name()))
             elif 'Floating point exception' in ht.output:
                 raise ExceptionNoSpectraProduced(dict(scw=self.input_scw.scwid,jemx=self.input_jemx.get_name()))
+            elif "Couldn't find SCP and gain history elapsed time:" in ht.output:
+                raise ExceptionNoSCPandGainHistory(dict(scw=self.input_scw.scwid,jemx=self.input_jemx.get_name()))
             else:
                 raise
 
