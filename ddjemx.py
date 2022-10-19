@@ -1204,8 +1204,15 @@ class mosaic_jemx_osa(ddosa.DataAnalysis):
         ht['skipLevels']=""
         ht['chatter']=5
         ht['IMA2_outfile']=fn_mosaic
-        ht.run()
-
+        try:
+            ht.run()
+        except pilton.HEAToolException as ex:
+            if 'segmentation violation' in ht.output:
+                raise SegFault()
+            
+            if 'Segmentation fault' in ht.output:
+                raise SegFault()
+        
         #It finds sources in the mosaic
         fn = self.input_jemx.get_name()+"_sloc_res.fits"
         ddosa.remove_withtemplate(fn)
