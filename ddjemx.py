@@ -51,6 +51,10 @@ class NoUsefulData(da.AnalysisException):
 class SegFault(Exception):
     pass
 
+
+class SegFaultInMosaic(da.AnalysisException):
+    pass
+
 class NoGAIN(Exception):
     pass
 
@@ -1208,10 +1212,10 @@ class mosaic_jemx_osa(ddosa.DataAnalysis):
             ht.run()
         except pilton.HEAToolException as ex:
             if 'segmentation violation' in ht.output:
-                raise SegFault()
+                raise SegFaultInMosaic()
             
             if 'Segmentation fault' in ht.output:
-                raise SegFault()
+                raise SegFaultInMosaic()
         
         #It finds sources in the mosaic
         fn = self.input_jemx.get_name()+"_sloc_res.fits"
