@@ -99,7 +99,7 @@ class UserCat(ddosa.DataAnalysis):
         #f[1].data=f[1].data[f[1].data['FLAG']==1]
 
         f[1].data['FLAG'] = 1
-        f.writeto(fn,clobber=True)
+        f.writeto(fn,overwrite=True)
 
         self.cat=da.DataFile(fn)
 
@@ -605,7 +605,7 @@ class ProcessJSpectra(ddosa.DataAnalysis):
             f=fits.open(fn)
             f[1].header['ANCRFILE']=arffn
             f[1].header['RESPFILE']=self.input_rmf.rmf.get_path()
-            f.writeto(fn,clobber=True)
+            f.writeto(fn,overwrite=True)
             setattr(self,arffn,da.DataFile(arffn))
 
 #j_rebin_rmf binlist=STD_016
@@ -819,11 +819,11 @@ class mosaic_jemx(ddosa.DataAnalysis):
             stacked = "stacked_aligned_%.5lg_%.5lg.fits" % (ra, dec)
             f = stacked_aligned / stacked_aligned_var
             v = 1 / stacked_aligned_var
-            fits.PrimaryHDU(f / v ** 0.5).writeto(stacked, clobber=True)
+            fits.PrimaryHDU(f / v ** 0.5).writeto(stacked, overwrite=True)
             setattr(self, stacked, da.DataFile(stacked))
 
             stacked = "stacked_%.5lg_%.5lg.fits" % (ra, dec)
-            stacked_file.writeto(stacked, clobber=True)
+            stacked_file.writeto(stacked, overwrite=True)
             self.stacked.append([(ra, dec), da.DataFile(stacked)])
             setattr(self, stacked, da.DataFile(stacked))
 
