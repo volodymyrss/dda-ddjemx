@@ -244,6 +244,10 @@ class jemx_image(ddosa.DataAnalysis):
         if 'Element JMX1-SPEC-* was not found' in ht.output:
             raise NoUsefulData()
         
+
+        if 'null or NaN values for this particular revolution' in ht.output:
+            raise NoUsefulData()
+
         if 'Error_2: Task jemx_science_analysis terminating' in ht.output:
             raise UnknownJemxError()
 
