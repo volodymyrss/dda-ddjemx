@@ -55,6 +55,10 @@ class SegFault(Exception):
 class SegFaultInMosaic(da.AnalysisException):
     pass
 
+
+class CorruptScwInSpePick(da.AnalysisException):
+    pass
+
 class NoGAIN(Exception):
     pass
 
@@ -1072,8 +1076,12 @@ class spe_pick(ddosa.DataAnalysis):
             ht['instrument']=self.input_jemx.get_name()
             ht['sumname']=sumname
             ht['single']='n'
-            ht.run()
 
+            try:
+                ht.run()
+            except pilton.HEAToolException as e:
+                if 'Error -35805 searching for source spectra in SWG' in ht.output:
+                    raise CorruptScwInSpePick()
                 
 
             import glob
