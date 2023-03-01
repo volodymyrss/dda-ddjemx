@@ -42,6 +42,9 @@ class ExceptionNoSCPandGainHistory(da.AnalysisException):
 class ExceptionNoLCProduced(da.AnalysisException):
     pass
 
+class ExceptionCountNotSolveGainVariation(da.AnalysisException):
+    pass
+
 class OSACrash(da.AnalysisException):
     pass
 
@@ -238,6 +241,10 @@ class jemx_image(ddosa.DataAnalysis):
         except pilton.HEAToolException as ex:
             if 'J_SCW_NO_MINIMUM_DATA' in ht.output:
                 raise ExceptionJ_SCW_NO_MINIMUM_DATA(dict(scw=self.input_scw.scwid,jemx=self.input_jemx.get_name()))
+            
+            if 'Could not solve gain history time-variation problem: -321122' in ht.output:
+                raise ExceptionCountNotSolveGainVariation(dict(scw=self.input_scw.scwid,jemx=self.input_jemx.get_name()))
+            
         
         if 'J_COR_BAD_GAINHISTDOL' in ht.output:
             raise NoGAIN()
