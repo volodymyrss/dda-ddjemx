@@ -39,7 +39,11 @@ class ExceptionNoSpectraProduced(da.AnalysisException):
 
 class ExceptionNoSCPandGainHistory(da.AnalysisException):
     pass
+
 class ExceptionNoLCProduced(da.AnalysisException):
+    pass
+
+class ExceptionFailingScWUnknownReasonOGC(da.AnalysisException):
     pass
 
 class ExceptionCountNotSolveGainVariation(da.AnalysisException):
@@ -206,7 +210,13 @@ class jemx_image(ddosa.DataAnalysis):
         ogc['instrument'] = self.input_jemx.get_NAME()
         ogc['ogid'] = "scw_" + self.input_scw.scwid
         ogc['baseDir']=wd # dangerous
-        ogc.run()
+
+        try:
+            ogc.run()
+        except pilton.HEAToolException as e:
+            if '021100220010' in self.input_scw.swgpath:
+                raise ExceptionFailingScWUnknownReasonOGC()
+            raise
             
         print("\033[31m OG created! \033[0m")
 
