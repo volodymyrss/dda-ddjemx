@@ -214,8 +214,9 @@ class jemx_image(ddosa.DataAnalysis):
         try:
             ogc.run()
         except pilton.HEAToolException as e:
-            if '021100220010' in self.input_scw.swgpath:
-                raise ExceptionFailingScWUnknownReasonOGC()
+            for corrupt_scw in '021100220010', '039100070010':
+                if corrupt_scw in self.input_scw.swgpath:
+                    raise ExceptionFailingScWUnknownReasonOGC()
             raise
             
         print("\033[31m OG created! \033[0m")
