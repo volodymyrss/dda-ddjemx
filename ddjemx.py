@@ -49,6 +49,9 @@ class ExceptionFailingScWUnknownReasonOGC(da.AnalysisException):
 class ExceptionCountNotSolveGainVariation(da.AnalysisException):
     pass
 
+class BadAfterOnePass(da.AnalysisException):
+    pass
+
 class OSACrash(da.AnalysisException):
     pass
 
@@ -252,6 +255,9 @@ class jemx_image(ddosa.DataAnalysis):
         except pilton.HEAToolException as ex:
             if 'J_SCW_NO_MINIMUM_DATA' in ht.output:
                 raise ExceptionJ_SCW_NO_MINIMUM_DATA(dict(scw=self.input_scw.scwid,jemx=self.input_jemx.get_name()))
+            
+            if 'After one-pass-loop, status = -1' in ht.output
+                raise BadAfterOnePass(dict(scw=self.input_scw.scwid,jemx=self.input_jemx.get_name()))
             
             if 'Could not solve gain history time-variation problem: -321122' in ht.output:
                 raise ExceptionCountNotSolveGainVariation(dict(scw=self.input_scw.scwid,jemx=self.input_jemx.get_name()))
