@@ -261,6 +261,10 @@ class jemx_image(ddosa.DataAnalysis):
             
             if 'Could not solve gain history time-variation problem: -321122' in ht.output:
                 raise ExceptionCountNotSolveGainVariation(dict(scw=self.input_scw.scwid,jemx=self.input_jemx.get_name()))
+
+            if "Couldn't find SCP and gain history elapsed time:" in ht.output:
+                raise ExceptionNoSCPandGainHistory(dict(scw=self.input_scw.scwid,jemx=self.input_jemx.get_name()))
+
             
         
         if 'J_COR_BAD_GAINHISTDOL' in ht.output:
