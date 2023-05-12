@@ -256,7 +256,7 @@ class jemx_image(ddosa.DataAnalysis):
             if 'J_SCW_NO_MINIMUM_DATA' in ht.output:
                 raise ExceptionJ_SCW_NO_MINIMUM_DATA(dict(scw=self.input_scw.scwid,jemx=self.input_jemx.get_name()))
             
-            if 'After one-pass-loop, status = -1' in ht.output
+            if 'After one-pass-loop, status = -1' in ht.output:
                 raise BadAfterOnePass(dict(scw=self.input_scw.scwid,jemx=self.input_jemx.get_name()))
             
             if 'Could not solve gain history time-variation problem: -321122' in ht.output:
