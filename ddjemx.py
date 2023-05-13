@@ -386,6 +386,10 @@ class jemx_lcr(ddosa.DataAnalysis):
             if 'J_SCW_NO_MINIMUM_DATA' in ht.output:
                 raise ExceptionJ_SCW_NO_MINIMUM_DATA(dict(scw=self.input_scw.scwid,jemx=self.input_jemx.get_name()))
 
+            if 'After one-pass-loop, status = -1' in ht.output:
+                raise BadAfterOnePass(dict(scw=self.input_scw.scwid,jemx=self.input_jemx.get_name()))
+
+
         if 'segmentation violation' in ht.output:
             raise SegFault()
 
@@ -542,6 +546,8 @@ class jemx_spe(ddosa.DataAnalysis):
                 raise ExceptionNoSpectraProduced(dict(scw=self.input_scw.scwid,jemx=self.input_jemx.get_name()))
             elif "Couldn't find SCP and gain history elapsed time:" in ht.output:
                 raise ExceptionNoSCPandGainHistory(dict(scw=self.input_scw.scwid,jemx=self.input_jemx.get_name()))
+            elif 'After one-pass-loop, status = -1' in ht.output:
+                raise BadAfterOnePass(dict(scw=self.input_scw.scwid,jemx=self.input_jemx.get_name()))
             else:
                 raise
 
