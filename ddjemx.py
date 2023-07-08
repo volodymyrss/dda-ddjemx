@@ -217,7 +217,7 @@ class jemx_image(ddosa.DataAnalysis):
         try:
             ogc.run()
         except pilton.HEAToolException as e:
-            for corrupt_scw in '021100220010', '039100070010', '054100130010', '078800590010':
+            for corrupt_scw in '021100220010', '039100070010', '054100130010', '078800590010', '078800460010':
                 if corrupt_scw in self.input_scw.swgpath:
                     raise ExceptionFailingScWUnknownReasonOGC()
             raise
