@@ -15,6 +15,9 @@ from astropy.io import fits as fits
 from numpy import *
 import re
 
+corrupt_scws = ['021100220010', '039100070010', '054100130010', '078800590010', '078800460010', '078800590010']
+
+
 class OSAEnv(ddosa.DataAnalysis):
     version="10.2"
 
@@ -217,7 +220,7 @@ class jemx_image(ddosa.DataAnalysis):
         try:
             ogc.run()
         except pilton.HEAToolException as e:
-            for corrupt_scw in '021100220010', '039100070010', '054100130010', '078800590010', '078800460010':
+            for corrupt_scw in corrupt_scws:
                 if corrupt_scw in self.input_scw.swgpath:
                     raise ExceptionFailingScWUnknownReasonOGC()
             raise
@@ -389,7 +392,7 @@ class jemx_lcr(ddosa.DataAnalysis):
             if 'After one-pass-loop, status = -1' in ht.output:
                 raise BadAfterOnePass(dict(scw=self.input_scw.scwid,jemx=self.input_jemx.get_name()))
 
-            for corrupt_scw in '021100220010', '039100070010', '054100130010', '078800590010', '078800460010':
+            for corrupt_scw in corrupt_scws:
                 if corrupt_scw in self.input_scw.swgpath:
                     raise ExceptionFailingScWUnknownReasonOGC()
 
@@ -542,7 +545,7 @@ class jemx_spe(ddosa.DataAnalysis):
         except UnicodeEncodeError as e: 
             raise OSACrash(str(e))
         except pilton.HEAToolException as ex:
-            for corrupt_scw in '021100220010', '039100070010', '054100130010', '078800590010', '078800460010':
+            for corrupt_scw in corrupt_scws:
                 if corrupt_scw in self.input_scw.swgpath:
                     raise ExceptionFailingScWUnknownReasonOGC()
 
