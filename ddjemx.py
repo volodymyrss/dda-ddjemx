@@ -352,7 +352,13 @@ class jemx_lcr(ddosa.DataAnalysis):
         ogc['instrument']=self.input_jemx.get_NAME()
         ogc['ogid']="scw_"+self.input_scw.scwid
         ogc['baseDir']=wd # dangerous
-        ogc.run()
+        try:
+            ogc.run()
+        except pilton.HEAToolException as ex:
+            for corrupt_scw in corrupt_scws:
+                if corrupt_scw in self.input_scw.swgpath:
+                    raise ExceptionFailingScWUnknownReasonOGC()
+            raise
 
         scwroot="scw/"+self.input_scw.scwid
 
@@ -496,8 +502,14 @@ class jemx_spe(ddosa.DataAnalysis):
         ogc['instrument']=self.input_jemx.get_NAME()
         ogc['ogid']="scw_"+self.input_scw.scwid
         ogc['baseDir']=wd # dangerous
-        ogc.run()
 
+        try:
+            ogc.run()
+        except pilton.HEAToolException as ex:
+            for corrupt_scw in corrupt_scws:
+                if corrupt_scw in self.input_scw.swgpath:
+                    raise ExceptionFailingScWUnknownReasonOGC()
+            raise
 
         scwroot="scw/"+self.input_scw.scwid
         
