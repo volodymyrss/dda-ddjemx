@@ -15,7 +15,7 @@ from astropy.io import fits as fits
 from numpy import *
 import re
 
-corrupt_scws = ['021100220010', '039100070010', '054100130010', '078800590010', '078800460010', '078800590010']
+corrupt_scws = ['021100220010', '039100070010', '054100130010', '078800590010', '078800460010', '078800590010', '114600470010']
 
 
 class OSAEnv(ddosa.DataAnalysis):
