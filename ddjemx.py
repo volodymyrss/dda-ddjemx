@@ -260,7 +260,7 @@ class jemx_image(ddosa.DataAnalysis):
             else:
                 print("not a full path",path)
                 path="../../"+path
-            ht['GTI_gtiUserI']=path
+            ht['GTI_gtiUser']=path
             ht['GTI_TimeFormat']='UTC'
 
         try:
