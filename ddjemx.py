@@ -253,6 +253,16 @@ class jemx_image(ddosa.DataAnalysis):
 
         ht['jemxNum']=self.input_jemx.num
 
+        if hasattr(self,'input_usergti'):
+            path=self.input_usergti.gti.get_path()
+            if os.path.abspath(path)==os.path.normpath(path):
+                print("full path",path)
+            else:
+                print("not a full path",path)
+                path="../../"+path
+            ht['GTI_gtiUserI']=path
+            ht['GTI_TimeFormat']='UTC'
+
         try:
             ht.run()
         except pilton.HEAToolException as ex:
