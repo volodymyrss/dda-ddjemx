@@ -1123,6 +1123,10 @@ class spe_pick(ddosa.DataAnalysis):
             if source_name == "CONFUSED ID":
                 print("encountered CONFUSED ID: this makes no sense to merge, and causes segfault!")
                 continue
+            
+            if source_name == "":
+                print("encountered empty name: this makes no sense to merge, and causes segfault!")
+                continue
 
             print("will pick source:", source_name)
 
@@ -1175,7 +1179,7 @@ class lc_pick(ddosa.DataAnalysis):
 
     cached=True
 
-    version="v1.2"
+    version="v1.3"
 
     def get_version(self):
         try:
@@ -1210,6 +1214,19 @@ class lc_pick(ddosa.DataAnalysis):
 
         attached_files = []
         for source_name, source_id in zip(source_names,source_ids):
+            
+            if source_name == "NEW SOURCE":
+                print("encountered NEW SOURCE: this makes no sense to merge")
+                continue
+            
+            if source_name == "CONFUSED ID":
+                print("encountered CONFUSED ID: this makes no sense to merge, and causes segfault!")
+                continue
+            
+            if source_name == '' or source_name == 'UNKNOWN' or source_id == '' or source_id == 'UNKNOWN':
+                print('Skipping source_name \'%s\' source_id \'%s\': this makes no sense to merge' %(source_name, source_id))
+                continue
+            
             sumname = "lc_%s" % source_name.replace(" ","_").replace("+","_").replace("-","_")
 
             ddosa.remove_withtemplate(sumname+".fits")
