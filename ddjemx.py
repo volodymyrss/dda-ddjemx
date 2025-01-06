@@ -1083,6 +1083,8 @@ class spe_pick(ddosa.DataAnalysis):
     #source_names=["Crab"]
 
     cached=True
+    
+    version="v1.3"
 
     def get_version(self):
         try:
