@@ -1125,7 +1125,7 @@ class spe_pick(ddosa.DataAnalysis):
                 continue
             
             if source_name == "":
-                print("encountered empty name: this makes no sense to merge, and causes segfault!")
+                print("encountered empty name: this makes no sense to merge")
                 continue
 
             print("will pick source:", source_name)
