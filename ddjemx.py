@@ -1200,6 +1200,9 @@ class lc_pick(ddosa.DataAnalysis):
         if len(self.source_names) != 0:
             source_names = self.source_names
             source_ids = self.source_ids
+            
+            sources_to_extract = list(set(list(source_names) + list(source_ids)))
+            
         else:
             ddosa.remove_withtemplate("sources.fits(JMX%i-OBS.-RES.tpl)"%self.input_jemx.num)
             ht = ddosa.heatool("src_collect", env=env_for_scw(self)
@@ -1211,11 +1214,14 @@ class lc_pick(ddosa.DataAnalysis):
 
             source_names  =list(fits.open('sources.fits')[1].data['NAME'])
             source_ids  =list(fits.open('sources.fits')[1].data['SOURCE_ID'])
+            
+            sources_to_extract = list(set(source_names + source_ids))
 
         print("found the following sources",source_names, source_ids)
 
         attached_files = []
-        for source_name, source_id in zip(source_names,source_ids):
+        
+        for source_name in sources_to_extract:
             
             if source_name == "NEW SOURCE":
                 print("encountered NEW SOURCE: this makes no sense to merge")
@@ -1225,19 +1231,18 @@ class lc_pick(ddosa.DataAnalysis):
                 print("encountered CONFUSED ID: this makes no sense to merge, and causes segfault!")
                 continue
             
-            if source_name == '' or source_name == 'UNKNOWN' or source_id == '' or source_id == 'UNKNOWN':
-                print('Skipping source_name \'%s\' source_id \'%s\': this makes no sense to merge' %(source_name, source_id))
+            if source_name == '' or source_name == 'UNKNOWN':
+                print('Skipping source_name \'%s\': this makes no sense to merge' %(source_name))
                 continue
             
             sumname = "lc_%s" % source_name.replace(" ","_").replace("+","_").replace("-","_")
 
             ddosa.remove_withtemplate(sumname+".fits")
             
-
             ht = ddosa.heatool("lc_pick", env=env_for_scw(self)
 )
             ht['group'] = "ogg.fits[1]"
-            ht['source']=source_id
+            ht['source']=source_name
             ht['instrument']=self.input_jemx.get_name()
             ht['lc']=sumname
             ht['emin']=""
