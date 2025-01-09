@@ -21,30 +21,35 @@ corrupt_scws = ['021100220010', '039100070010', '054100130010', '078800590010', 
 class OSAEnv(ddosa.DataAnalysis):
     version="10.2"
 
-
-
 try:
     import heaspa
 except:
     pass
 
+
 class ExceptionJ_SCW_NO_MINIMUM_DATA(da.AnalysisException):
     pass
+
 
 class ExceptionJ_SCW_LackingData(da.AnalysisException):
     pass
 
+
 class ExceptionNoImageProduced(da.AnalysisException):
     pass
+
 
 class ExceptionNoSpectraProduced(da.AnalysisException):
     pass
 
+
 class ExceptionNoSCPandGainHistory(da.AnalysisException):
     pass
 
+
 class ExceptionNoLCProduced(da.AnalysisException):
     pass
+
 
 class ExceptionFailingScWUnknownReasonOGC(da.AnalysisException):
     pass
