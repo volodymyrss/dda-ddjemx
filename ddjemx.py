@@ -570,7 +570,7 @@ class jemx_lcr(ddosa.DataAnalysis):
 
     cached=True
 
-    version="v1.3.6"
+    version="v1.3.5"
 
     def main(self):
         t1 = time.time()
@@ -1415,7 +1415,7 @@ class lc_pick(ddosa.DataAnalysis):
 
     cached=True
 
-    version="v1.3"
+    version="v1.3.5"
 
     def get_version(self):
         try:
