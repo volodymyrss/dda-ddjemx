@@ -570,7 +570,7 @@ class jemx_lcr(ddosa.DataAnalysis):
 
     cached=True
 
-    version="v1.3.5"
+    version="v1.3.6"
 
     def main(self):
         t1 = time.time()
