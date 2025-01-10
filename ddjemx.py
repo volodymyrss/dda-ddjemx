@@ -21,30 +21,35 @@ corrupt_scws = ['021100220010', '039100070010', '054100130010', '078800590010', 
 class OSAEnv(ddosa.DataAnalysis):
     version="10.2"
 
-
-
 try:
     import heaspa
 except:
     pass
 
+
 class ExceptionJ_SCW_NO_MINIMUM_DATA(da.AnalysisException):
     pass
+
 
 class ExceptionJ_SCW_LackingData(da.AnalysisException):
     pass
 
+
 class ExceptionNoImageProduced(da.AnalysisException):
     pass
+
 
 class ExceptionNoSpectraProduced(da.AnalysisException):
     pass
 
+
 class ExceptionNoSCPandGainHistory(da.AnalysisException):
     pass
 
+
 class ExceptionNoLCProduced(da.AnalysisException):
     pass
+
 
 class ExceptionFailingScWUnknownReasonOGC(da.AnalysisException):
     pass
@@ -320,6 +325,231 @@ class jemx_image(ddosa.DataAnalysis):
         #else:
         #    raise ExceptionNoImageProduced(dict(scw=self.input_scw.scwid,jemx=self.input_jemx.get_name()))
 
+class jemx_slew(ddosa.DataAnalysis):
+    input_scw=ddosa.ScWData
+    input_ic=ddosa.ICRoot
+    input_jemx=JEMX
+
+    COR_gainModel=-1
+
+    def get_version(self):
+        v=self.get_signature()+"."+self.version
+        if self.COR_gainModel!=1:
+            v+=".gM%i"%self.COR_gainModel
+        return v
+
+    cached=True
+
+    version="v1.3.5"
+
+    def main(self): 
+        t1 = time.time()
+        open("scw.list","w").write(self.input_scw.swgpath+"[1]")
+
+        if os.path.exists("obs"):
+            os.rename("obs","obs."+str(time.time()))
+
+        env = None
+        if self.input_scw.scwid.endswith('.000'):
+            env = deepcopy(os.environ)
+            env['REP_BASE_PROD'] = os.environ.get("REP_BASE_PROD_NRT")
+            print("\033[31msetting RBP for NRT:", env['REP_BASE_PROD'], "\033[0m")
+
+        wd=os.getcwd().replace("[","_").replace("]","_")
+        bin="og_create"
+        ogc=ddosa.heatool(bin, env=env_for_scw(self))
+        ogc['idxSwg']="scw.list"
+        ogc['instrument']=self.input_jemx.get_NAME()
+        ogc['ogid']="scw_"+self.input_scw.scwid
+        ogc['baseDir']=wd # dangerous
+
+        try:
+            ogc.run()
+        except pilton.HEAToolException as ex:
+            for corrupt_scw in corrupt_scws:
+                if corrupt_scw in self.input_scw.swgpath:
+                    raise ExceptionFailingScWUnknownReasonOGC()
+            raise
+        
+        bin="jemx_scw_analysis"
+        os.environ['COMMONSCRIPT']="1"
+        
+        ht=ddosa.heatool(bin,wd=wd+"/obs/"+ogc['ogid'].value, env=env_for_scw(self))
+        ht['swgDOL']='scw/' + str(self.input_scw.input_scwid.handle) + '/' + self.input_jemx.get_swg()
+        ht['IC_Group']=self.input_ic.icindex
+        ht['IC_Alias']="OSA"
+        ht['startLevel']="COR"
+        ht['endLevel']="DEAD"
+        ht['skipSPEfirstScw']="no"
+        ht['ScwType']="SLEW"
+        ht['general_jemxNum']=self.input_jemx.num
+        
+        try:
+            ht.run()
+        except pilton.HEAToolException as ex:
+            if 'J_SCW_NO_MINIMUM_DATA' in ht.output:
+                raise ExceptionJ_SCW_NO_MINIMUM_DATA(dict(scw=self.input_scw.scwid,jemx=self.input_jemx.get_name()))
+
+            if 'After one-pass-loop, status = -1' in ht.output:
+                raise BadAfterOnePass(dict(scw=self.input_scw.scwid,jemx=self.input_jemx.get_name()))
+
+            for corrupt_scw in corrupt_scws:
+                if corrupt_scw in self.input_scw.swgpath:
+                    raise ExceptionFailingScWUnknownReasonOGC()
+
+
+        if 'segmentation violation' in ht.output:
+            raise SegFault()
+        
+        name=self.input_jemx.get_name()
+        scwpath=ht.cwd+"/scw/"+self.input_scw.scwid
+
+        cor = scwpath+"/"+name+"_full_cor.fits"
+
+        if os.path.exists(cor):
+            shutil.copy(cor, name+"_full_cor.fits")
+            self.cor=da.DataFile(name + "_full_cor.fits")
+
+        gti = scwpath+"/"+name+"_gti.fits"
+
+        if os.path.exists(gti):
+            shutil.copy(gti, name+"_gti.fits")
+            self.gti=da.DataFile(name + "_gti.fits")
+
+        dead = scwpath+"/"+name+"_dead_time.fits"
+
+        if os.path.exists(dead):
+            shutil.copy(dead, name+"_dead_time.fits")
+            self.dead=da.DataFile(name + "_dead_time.fits")
+
+        t2 = time.time()
+        print('JEM-X slew took {}'.format(t2 - t1))
+
+class jemx_base(ddosa.DataAnalysis):
+    input_scw=ddosa.ScWData
+    input_ic=ddosa.ICRoot
+    input_jemx=JEMX
+    input_refcat=ddosa.GRcat
+    input_jbins=JEnergyBinsLC
+    input_timebin=LCTimeBin
+    input_osaenv = OSAEnv
+
+    COR_gainModel=-1
+
+    def get_version(self):
+        v=self.get_signature()+"."+self.version
+        if self.COR_gainModel!=1:
+            v+=".gM%i"%self.COR_gainModel
+        return v
+
+    cached=True
+
+    version="v1.0"
+
+    def main(self):
+        t1 = time.time()
+        open("scw.list","w").write(self.input_scw.swgpath+"[1]")
+
+        if os.path.exists("obs"):
+            os.rename("obs","obs."+str(time.time()))
+
+        env = None
+        if self.input_scw.scwid.endswith('.000'):
+            env = deepcopy(os.environ)
+            env['REP_BASE_PROD'] = os.environ.get("REP_BASE_PROD_NRT")
+            print("\033[31msetting RBP for NRT:", env['REP_BASE_PROD'], "\033[0m")
+
+
+        wd=os.getcwd().replace("[","_").replace("]","_")
+        bin="og_create"
+        ogc=ddosa.heatool(bin, env=env_for_scw(self))
+        ogc['idxSwg']="scw.list"
+        ogc['instrument']=self.input_jemx.get_NAME()
+        ogc['ogid']="scw_"+self.input_scw.scwid
+        ogc['baseDir']=wd # dangerous
+        try:
+            ogc.run()
+        except pilton.HEAToolException as ex:
+            for corrupt_scw in corrupt_scws:
+                if corrupt_scw in self.input_scw.swgpath:
+                    raise ExceptionFailingScWUnknownReasonOGC()
+            raise
+
+        scwroot="scw/"+self.input_scw.scwid
+
+        bin="jemx_science_analysis"
+        os.environ['COMMONSCRIPT']="1"
+        ht=ddosa.heatool(bin,wd=wd+"/obs/"+ogc['ogid'].value, env=env_for_scw(self)
+)
+        ht['ogDOL']=self.input_jemx.get_og()
+        ht['IC_Group']=self.input_ic.icindex
+        ht['IC_Alias']="OSA"
+        ht['startLevel']="COR"
+        ht['endLevel']="DEAD"
+        ht['CAT_I_refCat'] = self.input_refcat.cat
+
+        if hasattr(self,'input_usercat'):
+            ht['CAT_I_usrCat']=self.input_usercat.cat.get_full_path()
+
+        ht['skipLevels']="SPE"
+
+        if self.input_jbins.bins is None:
+            ht['nChanBins'] = self.input_jbins.nchanpow
+        else:
+            ht['nChanBins'] = len(self.input_jbins.bin_interpretation)
+            ht['chanLow'] = " ".join(["%i" % bin['chmin'] for bin in self.input_jbins.bin_interpretation])
+            ht['chanHigh'] = " ".join(["%i" % bin['chmax'] for bin in self.input_jbins.bin_interpretation])
+
+        ht['LCR_timeStep']=self.input_timebin.time_bin_seconds
+        ht['COR_gainModel']=self.COR_gainModel
+        ht['jemxNum']=self.input_jemx.num
+
+        try:
+            ht.run()
+        except pilton.HEAToolException as ex:
+            if 'J_SCW_NO_MINIMUM_DATA' in ht.output:
+                raise ExceptionJ_SCW_NO_MINIMUM_DATA(dict(scw=self.input_scw.scwid,jemx=self.input_jemx.get_name()))
+
+            if 'After one-pass-loop, status = -1' in ht.output:
+                raise BadAfterOnePass(dict(scw=self.input_scw.scwid,jemx=self.input_jemx.get_name()))
+
+            for corrupt_scw in corrupt_scws:
+                if corrupt_scw in self.input_scw.swgpath:
+                    raise ExceptionFailingScWUnknownReasonOGC()
+
+
+        if 'segmentation violation' in ht.output:
+            raise SegFault()
+
+        name=self.input_jemx.get_name()
+        scwpath=ht.cwd+"/scw/"+self.input_scw.scwid
+
+        cor = scwpath+"/"+name+"_full_cor.fits"
+
+        if os.path.exists(cor):
+            shutil.copy(cor, name+"_full_cor.fits")
+            self.cor=da.DataFile(name + "_full_cor.fits")
+
+        gti = scwpath+"/"+name+"_gti.fits"
+
+        if os.path.exists(gti):
+            shutil.copy(gti, name+"_gti.fits")
+            self.gti=da.DataFile(name + "_gti.fits")
+
+        dead = scwpath+"/"+name+"_dead_time.fits"
+
+        if os.path.exists(dead):
+            shutil.copy(dead, name+"_dead_time.fits")
+            self.dead=da.DataFile(name + "_dead_time.fits")
+
+         #else:
+        #    raise ExceptionNoLCProduced()
+
+        t2 = time.time()
+        print('JEM-X pointing took {}'.format(t2 - t1))
+
+
+
 
 class jemx_lcr(ddosa.DataAnalysis):
     input_scw=ddosa.ScWData
@@ -343,6 +573,7 @@ class jemx_lcr(ddosa.DataAnalysis):
     version="v1.3.5"
 
     def main(self):
+        t1 = time.time()
         open("scw.list","w").write(self.input_scw.swgpath+"[1]")
 
         if os.path.exists("obs"):
@@ -437,8 +668,11 @@ class jemx_lcr(ddosa.DataAnalysis):
             shutil.copy(srcl_res, name+"_srcl_res.fits")
             self.res=da.DataFile(name+"_srcl_res.fits")
 
-         #else:
+                 #else:
         #    raise ExceptionNoLCProduced()
+
+        t2 = time.time()
+        print('JEM-X pointing took {}'.format(t2 - t1))
 
 
 class inspect_image_results(ddosa.DataAnalysis):
@@ -713,7 +947,7 @@ class JMXScWImageList(ddosa.DataAnalysis):
         return self.get_signature()+"."+repr(self.firstima)+"."+repr(self.maxima)
 
     def main(self):
-        print("jemx_image constructed as",ddosa.ii_skyimage())
+        print("jemx_image constructed as", ddosa.ii_skyimage())
         #ddosa.ShadowUBCImage(assume=scw)
         self.images=[(scw,jemx_image(assume=scw),) for scw in self.input_scwlist.scwlistdata]
 
@@ -1083,6 +1317,8 @@ class spe_pick(ddosa.DataAnalysis):
     #source_names=["Crab"]
 
     cached=True
+    
+    version="v1.3"
 
     def get_version(self):
         try:
@@ -1122,6 +1358,10 @@ class spe_pick(ddosa.DataAnalysis):
             
             if source_name == "CONFUSED ID":
                 print("encountered CONFUSED ID: this makes no sense to merge, and causes segfault!")
+                continue
+            
+            if source_name == "":
+                print("encountered empty name: this makes no sense to merge")
                 continue
 
             print("will pick source:", source_name)
@@ -1175,7 +1415,7 @@ class lc_pick(ddosa.DataAnalysis):
 
     cached=True
 
-    version="v1.2"
+    version="v1.3.5"
 
     def get_version(self):
         try:
@@ -1194,6 +1434,9 @@ class lc_pick(ddosa.DataAnalysis):
         if len(self.source_names) != 0:
             source_names = self.source_names
             source_ids = self.source_ids
+            
+            sources_to_extract = list(set(list(source_names) + list(source_ids)))
+            
         else:
             ddosa.remove_withtemplate("sources.fits(JMX%i-OBS.-RES.tpl)"%self.input_jemx.num)
             ht = ddosa.heatool("src_collect", env=env_for_scw(self)
@@ -1205,20 +1448,35 @@ class lc_pick(ddosa.DataAnalysis):
 
             source_names  =list(fits.open('sources.fits')[1].data['NAME'])
             source_ids  =list(fits.open('sources.fits')[1].data['SOURCE_ID'])
+            
+            sources_to_extract = list(set(source_names + source_ids))
 
         print("found the following sources",source_names, source_ids)
 
         attached_files = []
-        for source_name, source_id in zip(source_names,source_ids):
+        
+        for source_name in sources_to_extract:
+            
+            if source_name == "NEW SOURCE":
+                print("encountered NEW SOURCE: this makes no sense to merge")
+                continue
+            
+            if source_name == "CONFUSED ID":
+                print("encountered CONFUSED ID: this makes no sense to merge, and causes segfault!")
+                continue
+            
+            if source_name == '' or source_name == 'UNKNOWN':
+                print('Skipping source_name \'%s\': this makes no sense to merge' %(source_name))
+                continue
+            
             sumname = "lc_%s" % source_name.replace(" ","_").replace("+","_").replace("-","_")
 
             ddosa.remove_withtemplate(sumname+".fits")
             
-
             ht = ddosa.heatool("lc_pick", env=env_for_scw(self)
 )
             ht['group'] = "ogg.fits[1]"
-            ht['source']=source_id
+            ht['source']=source_name
             ht['instrument']=self.input_jemx.get_name()
             ht['lc']=sumname
             ht['emin']=""
