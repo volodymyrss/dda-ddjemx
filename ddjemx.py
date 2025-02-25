@@ -1415,7 +1415,7 @@ class lc_pick(ddosa.DataAnalysis):
 
     cached=True
 
-    version="v1.3.5"
+    version="v1.3.6"
 
     def get_version(self):
         try:
@@ -1491,6 +1491,20 @@ class lc_pick(ddosa.DataAnalysis):
 
             sumfile_fn = sumname + ".fits"
             if os.path.exists(sumfile_fn):
+                
+                # There are some cases where the time column has duplicated values
+                # This is a workaround to remove them
+                aa = fits.open(sumfile_fn ,'update')
+                time = aa[2].data['TIME']
+                # find index of duplicates in time
+                duplicates = np.where(np.diff(time) == 0)[0]
+                print(f'{sumfile_fn}: found {len(duplicates)} duplicated values in {len(time)} time bins')
+                if len(duplicates) > 0:
+                    # remove duplicates
+                    aa[2].data = np.delete(aa[2].data, duplicates)
+                    aa.writeto(sumfile_fn, overwrite=True)
+                aa.close()
+                
                 setattr(self,sumname,da.DataFile(sumfile_fn))
                 attached_files.append(sumfile_fn)
 
